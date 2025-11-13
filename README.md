@@ -1,6 +1,6 @@
 # Análisis de Tasas de Muones por Ángulo
 
-Este proyecto contiene el script `analysis/simple_time_series.py`, el cual procesa archivos de datos por ángulo y genera:
+Este proyecto contiene el script `analysis/muonalyze.py`, el cual procesa archivos de datos por ángulo y genera:
 
 1. Gráficas individuales Eventos/s vs Tiempo para cada ángulo.
 2. Gráfico combinado Tiempo vs Tasa para todos los ángulos seleccionados.
@@ -78,7 +78,7 @@ pip install numpy pandas matplotlib
 
 ### Ejemplo básico
 ```bash
-python3 analysis/simple_time_series.py \
+python3 analysis/muonalyze.py \
   --data-dir second \
   --variant 1 \
   --out salida_basica
@@ -86,7 +86,7 @@ python3 analysis/simple_time_series.py \
 
 ### Seleccionar ángulos explícitos
 ```bash
-python3 analysis/simple_time_series.py \
+python3 analysis/muonalyze.py \
   --data-dir second \
   --variant 1 \
   --angles 0,45,90 \
@@ -95,7 +95,7 @@ python3 analysis/simple_time_series.py \
 
 ### Rango con paso
 ```bash
-python3 analysis/simple_time_series.py \
+python3 analysis/muonalyze.py \
   --data-dir second \
   --variant 1 \
   --angles 0-90:15 \
@@ -104,7 +104,7 @@ python3 analysis/simple_time_series.py \
 
 ### Ventana temporal acotada (0–300 s)
 ```bash
-python3 analysis/simple_time_series.py \
+python3 analysis/muonalyze.py \
   --data-dir second \
   --variant 1 \
   --start-ms 0 --max-ms 300000 \
@@ -113,7 +113,7 @@ python3 analysis/simple_time_series.py \
 
 ### Gráfico normalizado con ajustes y CSV
 ```bash
-python3 analysis/simple_time_series.py \
+python3 analysis/muonalyze.py \
   --data-dir second \
   --variant 1 \
   --angles 0,45,90 \
@@ -125,7 +125,7 @@ python3 analysis/simple_time_series.py \
 
 ### Solo estadísticas sin gráfico angular
 ```bash
-python3 analysis/simple_time_series.py \
+python3 analysis/muonalyze.py \
   --data-dir second \
   --variant 1 \
   --angles 0,45,90 \
@@ -160,7 +160,7 @@ python3 analysis/simple_time_series.py \
 
 ---
 ## Mantenimiento Rápido
-- Código principal: `analysis/simple_time_series.py`
+- Código principal: `analysis/muonalyze.py`
 - Ajustar listas de ángulos permitidos en `ALLOWED_ANGLES` si se agregan nuevos.
 - Revisar parseo si cambia el formato de los archivos.
 
