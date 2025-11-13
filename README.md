@@ -167,4 +167,4 @@ python3 analysis/muonalyze.py \
 ---
 ## Contacto / Créditos
 - Email: av18012@ues.edu.sv
-Proyecto educativo de análisis de flujo de muones. Ajustes y fórmulas basadas en estadística básica (Poisson) y comparación simple de modelos.
+- Proyecto educativo de análisis de flujo de muones. Ajustes y fórmulas basadas en estadística básica (Poisson) y comparación simple de modelos.
