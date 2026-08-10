@@ -1,11 +1,18 @@
 """Prueba de humo de muon-angle-analysis.
 
-Existe desde el primer dia para que la puerta de verificacion sea ejecutable
-antes de que haya solver que verificar. Se sustituye por la comprobacion real en
-cuanto la haya: por orden de preferencia, una solucion analitica, una cantidad
-conservada, o un estudio de convergencia.
+Comprueba lo unico que se puede comprobar sin el pipeline: que los ocho
+archivos crudos estan donde el pipeline los espera y no estan vacios. Las
+comprobaciones de verdad viven en los demas archivos de tests/.
 """
 
+from pathlib import Path
 
-def test_el_paquete_se_importa():
-    import sim.core  # noqa: F401
+RAIZ = Path(__file__).resolve().parents[1]
+ANGULOS = [0, 5, 15, 25, 35, 45, 90, 360]
+
+
+def test_los_ocho_archivos_crudos_existen():
+    for angulo in ANGULOS:
+        ruta = RAIZ / "data" / "raw" / f"{angulo:03d}deg"
+        assert ruta.is_file(), f"falta el archivo crudo {ruta}"
+        assert ruta.stat().st_size > 0, f"archivo crudo vacio: {ruta}"
