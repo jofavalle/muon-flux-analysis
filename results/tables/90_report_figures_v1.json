@@ -1,0 +1,33 @@
+{
+  "provenance": {
+    "generated_utc": "2026-08-10T21:48:55+00:00",
+    "git": {
+      "commit": "639cad5a26e3f17617d6c7438ab592eced4a7962",
+      "branch": "main",
+      "inputs_clean": true
+    },
+    "seed": 20260810,
+    "python": "3.11.2",
+    "numpy": "2.4.6",
+    "platform": "Linux-6.1.0-52-amd64-x86_64-with-glibc2.36",
+    "parameters": {
+      "source_tables": "results/tables",
+      "source_fits": "results/fits"
+    }
+  },
+  "summary_figures": [
+    "90_summary_v1.pdf",
+    "90_summary_v1.png"
+  ],
+  "repeatability_figures": [
+    "90_repeatability_v1.pdf",
+    "90_repeatability_v1.png"
+  ],
+  "headline": {
+    "chi2_against_cos2": 372.9336502265023,
+    "constant_rate_hz": 1.8156885927637472,
+    "dominant_systematic": 0.07451422359986848,
+    "critical_systematic": 0.038808176565495615,
+    "modulated_fraction_bound": 0.2536289867345566
+  }
+}

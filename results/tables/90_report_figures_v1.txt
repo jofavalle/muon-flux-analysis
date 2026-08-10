@@ -1,0 +1,17 @@
+90_report_figures_v1
+generated: 2026-08-10T21:48:55+00:00
+commit:    639cad5a26e3f17617d6c7438ab592eced4a7962 (committed inputs)
+==============================================================================
+README figures, regenerated from the products of steps 02 to 06.
+No fit is performed here: every number drawn is read from results/.
+
+  90_summary:       90_summary_v1.pdf, 90_summary_v1.png
+  90_repeatability: 90_repeatability_v1.pdf, 90_repeatability_v1.png
+
+Headline numbers shown:
+  chi2 against pure cos^2:                372.9
+  I(90)/I(0):                             0.8056 +- 0.0491
+  constant rate:                          1.8157 1/s
+  run-to-run systematic (measured):       7.45 %
+  systematic that cancels significance:   3.88 %
+  bound on the modulated fraction:        < 25.4 %

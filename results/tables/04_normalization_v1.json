@@ -1,0 +1,102 @@
+{
+  "provenance": {
+    "generated_utc": "2026-08-10T21:48:49+00:00",
+    "git": {
+      "commit": "639cad5a26e3f17617d6c7438ab592eced4a7962",
+      "branch": "main",
+      "inputs_clean": true
+    },
+    "seed": 20260810,
+    "python": "3.11.2",
+    "numpy": "2.4.6",
+    "platform": "Linux-6.1.0-52-amd64-x86_64-with-glibc2.36",
+    "parameters": {
+      "reference_angle": 0
+    }
+  },
+  "reference_angle": 0,
+  "chi2_against_cos2": 372.9336502265023,
+  "n_physical_points": 7,
+  "non_monotonic_rises": [
+    {
+      "from_deg": 15.0,
+      "to_deg": 25.0,
+      "step": 0.1043228392799489,
+      "sigmas": 1.472474440364236
+    }
+  ],
+  "rows": [
+    {
+      "angle_deg": 0,
+      "live_rate_hz": 1.9983912182081416,
+      "error_hz": 0.07686120070031313,
+      "normalised": 1.0,
+      "normalised_error": 0.05439282932204211,
+      "cos2_predicted": 1.0,
+      "deviation_sigma": 0.0
+    },
+    {
+      "angle_deg": 5,
+      "live_rate_hz": 1.8008550796240737,
+      "error_hz": 0.07420294085083907,
+      "normalised": 0.901152418613414,
+      "normalised_error": 0.050794012328461154,
+      "cos2_predicted": 0.9924038765061041,
+      "deviation_sigma": -1.7965002902824354
+    },
+    {
+      "angle_deg": 15,
+      "live_rate_hz": 1.6893070243969723,
+      "error_hz": 0.07608256194825758,
+      "normalised": 0.8453334907624795,
+      "normalised_error": 0.05006549602923723,
+      "cos2_predicted": 0.9330127018922194,
+      "deviation_sigma": -1.751290171549224
+    },
+    {
+      "angle_deg": 25,
+      "live_rate_hz": 1.8977848702725615,
+      "error_hz": 0.06861455679159097,
+      "normalised": 0.9496563300424284,
+      "normalised_error": 0.050129617664156634,
+      "cos2_predicted": 0.8213938048432696,
+      "deviation_sigma": 2.558617663083999
+    },
+    {
+      "angle_deg": 35,
+      "live_rate_hz": 1.851702033357072,
+      "error_hz": 0.07946414019575773,
+      "normalised": 0.9265963623566168,
+      "normalised_error": 0.05339728563826672,
+      "cos2_predicted": 0.6710100716628343,
+      "deviation_sigma": 4.786503426882408
+    },
+    {
+      "angle_deg": 45,
+      "live_rate_hz": 1.7987502783983484,
+      "error_hz": 0.06745840583377663,
+      "normalised": 0.9000991707775812,
+      "normalised_error": 0.04835266813983973,
+      "cos2_predicted": 0.5000000000000001,
+      "deviation_sigma": 8.274603784437762
+    },
+    {
+      "angle_deg": 90,
+      "live_rate_hz": 1.6098463690402431,
+      "error_hz": 0.07622843489668622,
+      "normalised": 0.8055711786422444,
+      "normalised_error": 0.04914276304384747,
+      "cos2_predicted": 0.0,
+      "deviation_sigma": 16.392468163083873
+    },
+    {
+      "angle_deg": 360,
+      "live_rate_hz": 1.8494826481345665,
+      "error_hz": 0.08041228904932898,
+      "normalised": 0.9254857764001315,
+      "normalised_error": 0.05372322655741669,
+      "cos2_predicted": null,
+      "deviation_sigma": null
+    }
+  ]
+}

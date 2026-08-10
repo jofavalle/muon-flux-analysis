@@ -1,0 +1,116 @@
+{
+  "provenance": {
+    "generated_utc": "2026-08-10T21:48:44+00:00",
+    "git": {
+      "commit": "639cad5a26e3f17617d6c7438ab592eced4a7962",
+      "branch": "main",
+      "inputs_clean": true
+    },
+    "seed": 20260810,
+    "python": "3.11.2",
+    "numpy": "2.4.6",
+    "platform": "Linux-6.1.0-52-amd64-x86_64-with-glibc2.36",
+    "parameters": {
+      "data_dir": "data/raw",
+      "coincident_only": true
+    }
+  },
+  "rates": {
+    "0": {
+      "angle_deg": 0,
+      "n_events": 677,
+      "n_intervals": 676,
+      "window_s": 372.861,
+      "dead_time_s": 34.588897,
+      "live_time_s": 338.272103,
+      "dead_fraction": 0.09276619705466649,
+      "wall_rate_hz": 1.8130080646675304,
+      "live_rate_hz": 1.9983912182081416,
+      "live_rate_error_hz": 0.07686120070031313
+    },
+    "5": {
+      "angle_deg": 5,
+      "n_events": 590,
+      "n_intervals": 589,
+      "window_s": 360.032,
+      "dead_time_s": 32.965149,
+      "live_time_s": 327.066851,
+      "dead_fraction": 0.09156171951382099,
+      "wall_rate_hz": 1.6359656919384944,
+      "live_rate_hz": 1.8008550796240737,
+      "live_rate_error_hz": 0.07420294085083907
+    },
+    "15": {
+      "angle_deg": 15,
+      "n_events": 494,
+      "n_intervals": 493,
+      "window_s": 321.203,
+      "dead_time_s": 29.367358,
+      "live_time_s": 291.83564199999995,
+      "dead_fraction": 0.09142927681248307,
+      "wall_rate_hz": 1.5348549048421094,
+      "live_rate_hz": 1.6893070243969723,
+      "live_rate_error_hz": 0.07608256194825758
+    },
+    "25": {
+      "angle_deg": 25,
+      "n_events": 766,
+      "n_intervals": 765,
+      "window_s": 444.105,
+      "dead_time_s": 41.003462,
+      "live_time_s": 403.101538,
+      "dead_fraction": 0.09232830524312943,
+      "wall_rate_hz": 1.7225656094842434,
+      "live_rate_hz": 1.8977848702725615,
+      "live_rate_error_hz": 0.06861455679159097
+    },
+    "35": {
+      "angle_deg": 35,
+      "n_events": 544,
+      "n_intervals": 543,
+      "window_s": 323.015,
+      "dead_time_s": 29.771276,
+      "live_time_s": 293.243724,
+      "dead_fraction": 0.09216685293252636,
+      "wall_rate_hz": 1.6810364843737908,
+      "live_rate_hz": 1.851702033357072,
+      "live_rate_error_hz": 0.07946414019575773
+    },
+    "45": {
+      "angle_deg": 45,
+      "n_events": 712,
+      "n_intervals": 711,
+      "window_s": 435.41,
+      "dead_time_s": 40.135565,
+      "live_time_s": 395.27443500000004,
+      "dead_fraction": 0.09217878551250545,
+      "wall_rate_hz": 1.6329436622953077,
+      "live_rate_hz": 1.7987502783983484,
+      "live_rate_error_hz": 0.06745840583377663
+    },
+    "90": {
+      "angle_deg": 90,
+      "n_events": 447,
+      "n_intervals": 446,
+      "window_s": 304.741,
+      "dead_time_s": 27.69593,
+      "live_time_s": 277.04507,
+      "dead_fraction": 0.09088350435287672,
+      "wall_rate_hz": 1.4635378895521116,
+      "live_rate_hz": 1.6098463690402431,
+      "live_rate_error_hz": 0.07622843489668622
+    },
+    "360": {
+      "angle_deg": 360,
+      "n_events": 530,
+      "n_intervals": 529,
+      "window_s": 314.965,
+      "dead_time_s": 28.939067,
+      "live_time_s": 286.02593299999995,
+      "dead_fraction": 0.09188026288635247,
+      "wall_rate_hz": 1.679551696220215,
+      "live_rate_hz": 1.8494826481345665,
+      "live_rate_error_hz": 0.08041228904932898
+    }
+  }
+}
