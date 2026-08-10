@@ -24,6 +24,8 @@ from pathlib import Path
 
 import numpy as np
 
+from .provenance import portable_path
+
 # The header the files declare. Kept verbatim so it can be contrasted, and so
 # there is a record that it does not describe the data.
 DECLARED_HEADER = (
@@ -50,6 +52,7 @@ TEMPERATURE_RANGE_C = (-20.0, 60.0)
 STARTUP_PRESSURE_PA = 73157.02
 STARTUP_TEMPERATURE_C = 23.13
 STARTUP_TOLERANCE = 0.01
+
 
 
 @dataclass
@@ -202,7 +205,7 @@ def load_run(path: str | Path, angle_deg: int | None = None) -> Run:
             )
         angle_deg = int(matched.group(1))
 
-    quality = QualityReport(path=str(path))
+    quality = QualityReport(path=portable_path(path))
     rows: list[tuple] = []
 
     with open(path, "r", errors="ignore") as handle:
@@ -258,7 +261,7 @@ def load_run(path: str | Path, angle_deg: int | None = None) -> Run:
 
     return Run(
         angle_deg=angle_deg,
-        path=str(path),
+        path=portable_path(path),
         event=event,
         timestamp_ms=timestamp_ms,
         adc1=adc1,

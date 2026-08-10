@@ -24,6 +24,55 @@ import numpy as np
 
 DEFAULT_SEED = 20260810
 
+# Repository root, used to record paths portably.
+_REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
+
+
+def portable_path(path: str | Path) -> str:
+    """A path as recorded in the products: relative to the repository root.
+
+    Two reasons, and both matter for a public repository:
+
+    - **Reproducibility.** An absolute path makes a product depend on where the
+      repository happens to sit. Two correct runs of the same pipeline on the
+      same data would disagree merely because one ran in /home/alice and the
+      other in /home/bob, and `check_reproducibility.py` would report a
+      difference that is not one.
+    - **Privacy.** These products are committed and published. An absolute path
+      publishes the directory layout, and usually the username, of whoever ran
+      the pipeline. Nobody reading the analysis needs that.
+
+    A path outside the repository is reduced to its filename, for the same
+    reason: what lies outside is the runner's business and nobody else's.
+    """
+    path = Path(path)
+    try:
+        return str(path.resolve().relative_to(_REPOSITORY_ROOT))
+    except ValueError:
+        return path.name
+
+
+def _portable_parameters(parameters: dict[str, Any]) -> dict[str, Any]:
+    """Rewrite any parameter that names an existing path into a portable one.
+
+    Applied automatically rather than left to each script: the scripts take
+    directories as arguments, and one of them forgetting to normalise would
+    quietly publish a home directory into a committed file. Detection is by
+    whether the value actually resolves to something on disk, which is
+    deterministic, rather than by guessing from the parameter's name.
+    """
+    portable = {}
+    for key, value in parameters.items():
+        if isinstance(value, str) and value:
+            try:
+                if Path(value).exists():
+                    portable[key] = portable_path(value)
+                    continue
+            except OSError:
+                pass
+        portable[key] = value
+    return portable
+
 
 def commit_hash() -> dict[str, Any]:
     """Current commit hash and whether the inputs were committed.
@@ -74,7 +123,7 @@ def stamp(parameters: dict[str, Any] | None = None,
         "python": sys.version.split()[0],
         "numpy": np.__version__,
         "platform": platform.platform(),
-        "parameters": parameters or {},
+        "parameters": _portable_parameters(parameters or {}),
     }
 
 

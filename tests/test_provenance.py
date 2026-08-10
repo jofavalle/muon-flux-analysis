@@ -1,11 +1,14 @@
 """Traceability tests: _vN versioning and product serialisation."""
 
 import json
+from pathlib import Path
 
 import numpy as np
 import pytest
 
 from lib_muon import provenance
+
+ROOT = Path(__file__).resolve().parents[1]
 
 
 class TestVersioning:
@@ -71,6 +74,53 @@ class TestSerialisation:
         assert loaded["no_value"] is None
         assert loaded["nested"]["list"] == [1.0, None, 3.0]
         assert loaded["array"] == [None, 1.0]
+
+
+class TestPortablePaths:
+    """Committed products must not carry absolute paths.
+
+    Two reasons: an absolute path makes a product depend on where the
+    repository sits, so two correct runs disagree for no reason; and these
+    products are published, so an absolute path leaks the directory layout and
+    username of whoever ran the pipeline.
+    """
+
+    def test_a_path_inside_the_repository_becomes_relative(self):
+        absolute = ROOT / "data" / "raw" / "000deg"
+        assert provenance.portable_path(absolute) == "data/raw/000deg"
+
+    def test_an_outside_path_is_reduced_to_its_filename(self, tmp_path):
+        outside = tmp_path / "secret_directory" / "000deg"
+        outside.parent.mkdir(parents=True)
+        outside.write_text("x")
+        assert provenance.portable_path(outside) == "000deg"
+
+    def test_a_relative_path_stays_relative(self):
+        assert provenance.portable_path("data/raw/090deg") == "data/raw/090deg"
+
+    def test_directory_parameters_are_normalised_in_the_stamp(self):
+        stamp = provenance.stamp({"data_dir": str(ROOT / "data" / "raw")})
+        assert stamp["parameters"]["data_dir"] == "data/raw"
+
+    def test_non_path_parameters_are_left_alone(self):
+        stamp = provenance.stamp({"bin_seconds": 10.0, "strict": False,
+                                  "label": "not a path"})
+        assert stamp["parameters"]["bin_seconds"] == 10.0
+        assert stamp["parameters"]["strict"] is False
+        assert stamp["parameters"]["label"] == "not a path"
+
+    def test_no_committed_product_contains_an_absolute_path(self):
+        """Guards the published files themselves, not just the helper."""
+        results = ROOT / "results"
+        if not results.is_dir():
+            pytest.skip("no results/ committed in this working tree")
+        offenders = []
+        for path in sorted(results.rglob("*.json")):
+            text = path.read_text()
+            for marker in ('"/home/', '"/Users/', '"C:\\\\', '"/tmp/'):
+                if marker in text:
+                    offenders.append(f"{path.name} contains {marker}")
+        assert not offenders, offenders
 
 
 class TestProvenanceStamp:

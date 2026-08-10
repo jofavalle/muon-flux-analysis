@@ -76,6 +76,7 @@ def main() -> int:
     ap = argparse.ArgumentParser(description="Systematics and reassessment.")
     ap.add_argument("--data-dir", default="data/raw")
     ap.add_argument("--tables", default="results/tables")
+    ap.add_argument("--fits", default="results/fits")
     ap.add_argument("--out-figures", default="results/figures")
     args = ap.parse_args()
 
@@ -388,7 +389,7 @@ def main() -> int:
     ).x)
     bound_fraction = s_bound / (s_bound + b_at_bound)
 
-    fits_product = provenance.read_product("results/fits", "05_fits")
+    fits_product = provenance.read_product(args.fits, "05_fits")
     statistical_bound = fits_product["modulation_n2"]["modulated_fraction_bound_95"]
 
     lines += [
