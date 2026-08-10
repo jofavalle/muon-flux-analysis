@@ -1,170 +1,262 @@
-# Análisis de Tasas de Muones por Ángulo
+# Muon angular flux analysis
 
-Este proyecto contiene el script `analysis/muonalyze.py`, el cual procesa archivos de datos por ángulo y genera:
+Angular dependence of the cosmic muon flux, measured with a CosmicWatch desktop
+detector at seven angles plus one repeatability control.
 
-1. Gráficas individuales Eventos/s vs Tiempo para cada ángulo.
-2. Gráfico combinado Tiempo vs Tasa para todos los ángulos seleccionados.
-3. Gráfico Ángulo vs Tasa Normalizada I(θ)/I(0°) con curvas de referencia y ajustes estadísticos.
-4. (Opcional) Archivo CSV con estadísticas por ángulo y parámetros de ajuste.
+## Result
 
-La finalidad es estudiar la dependencia angular del flujo de muones y comparar los datos con el comportamiento teórico aproximado ∝ cos²θ o con un ajuste libre cos^nθ.
+**This setup did not measure the angular dependence of the muon flux, and the
+analysis explains why.**
+
+The fraction of flux modulated as `cos^2(theta)` is bounded at
+
+> **< 25.4 % at 95 % confidence**, systematic included.
+
+The data on their own prefer a modulated component of about 12 %, significant
+at p = 0.008 under pure counting statistics. **That preference does not
+survive.** A run-to-run systematic of 3.88 % is enough to cancel it, and the
+repeatability control in this very data set measures **7.45 %**, nearly twice
+that. With the measured systematic folded in, p = 0.19.
+
+The single most telling comparison in the whole data set:
+
+| | |
+|---|---|
+| Difference between two runs at the **same** angle | **7.45 %** |
+| The **entire** drop from 0 to 45 degrees | 10.0 % |
+
+The run-to-run systematic is the size of the whole signal the fit was trying to
+interpret.
+
+![Summary](results/figures/90_summary_v1.png)
+
+![Repeatability](results/figures/90_repeatability_v1.png)
+
+### Headline numbers
+
+| Quantity | Value |
+|---|---|
+| Events analysed | 4760, across 8 runs |
+| Constant rate | 1.816 [1.788, 1.844] 1/s at 68 % |
+| I(90)/I(0) measured | 0.806 +- 0.049 |
+| I(90)/I(0) predicted by `cos^2` | 0 |
+| chi-square against pure `cos^2`, 7 points | 372.9 |
+| Modulated fraction, best fit | 12.5 % |
+| Modulated fraction, 95 % upper bound | **25.4 %** |
+| Run-to-run systematic, measured | 7.45 % |
+| Systematic that cancels the significance | 3.88 % |
 
 ---
-## Formato de datos esperado
-Cada archivo se denomina `<angulo>grados` o `<angulo>grados2` según la variante. Ejemplo: `45grados`, `45grados2`.
 
-El script parsea líneas con columnas (simplificado):
+## Contents
+
+- [What the previous version of this repository published, and why it was wrong](#what-the-previous-version-published)
+- [Why the flux looks flat](#why-the-flux-looks-flat)
+- [Repository layout](#repository-layout)
+- [Reproducing the analysis](#reproducing-the-analysis)
+- [Documentation](#documentation)
+- [Limitations](#limitations)
+- [License](#license)
+
+---
+
+## What the previous version published
+
+Until 2026-08-10 this repository fitted `I(theta)/I(0) = cos^n(theta)` and
+reported **n = 0.006**. That number was double-precision rounding, not physics.
+
+`np.cos(np.deg2rad(90))` does not return zero. It returns 6.123e-17. Raised to a
+small exponent that is a number of order one:
+
 ```
-idx timestamp_ms adc1 adc2 sipm_mv v5 v6 deadtime_us coincident name
+cos(deg2rad(90)) ** 0.01 = 0.688
 ```
-Se filtran comentarios y líneas mal formadas. Solo se usan los eventos coincidentes (`coincident == 1`).
+
+So the grid search found a minimum pinned to the bottom edge of its range, and
+the exponent it reported was set by how a floating-point residue behaves under
+exponentiation. Two symptoms show how little it meant:
+
+- Dropping the single point at 90 degrees moved the exponent from 0.006 to
+  0.364, a factor of 64.
+- The exponent depended on whether the grid search refined its minimum: the
+  coarse grid gave 0.010, the refinement 0.006. A parameter whose value moves by
+  75 % with an implementation detail of the optimiser is not measuring anything.
+
+**Clamping `cos(90)` to exact zero does not fix the fit. It removes it.** With
+`cos(90) = 0`, every `cos^n` with n > 0 predicts exactly zero counts at 90
+degrees, where 446 intervals were observed. The likelihood is rigorously zero:
+`-logL` diverges, and there is no AIC or BIC to compare. The 6.123e-17 was the
+only reason the model could be fitted at all.
+
+Other defects corrected in the same pass, each of which changed a published
+number:
+
+| Defect | Effect |
+|---|---|
+| `DeadTime` column parsed and never used | every rate 10 % low |
+| Rate estimated as `N/T` instead of `(N-1)/T` | biased high by 1/N |
+| Run duration truncated to a whole multiple of `--bin-seconds` | a cosmetic flag moved the published rate by 0.4 % |
+| chi-square over ratios sharing a denominator | correlations ignored entirely |
+| 0 degree point counted in the degrees of freedom | reduced chi-square understated |
+| `sigma = 1.0` substituted for missing errors, `max(dof, 1)` | manufactured a reduced chi-square out of nothing |
+| Malformed lines dropped by `except Exception: continue` | one real malformed line, never reported |
+| Column order guessed by magnitude, per row | the file header declares the wrong order and nothing said so |
+
+The six usage examples in the old README all invoked `--data-dir second`, a
+directory that exists in no commit in the repository's history.
 
 ---
-## Lógica de Cálculo
-### 1. Serie temporal por segundo
-- Se toma el tiempo relativo acumulado (de ms a s).
-- Se agrupan eventos en bins de tamaño `--bin-seconds` (por defecto 1 s).
-- Se descarta el último bin parcial para evitar picos artificiales.
-- Se grafica: tasa instantánea por bin, media móvil (`--rolling-seconds`), banda ±1σ local.
 
-### 2. Tasa media por ángulo
-Para cada ángulo:
-- Intervalo temporal restringido por `--start-ms` y `--max-ms` (por defecto 0–600000 ms).
-- Se determina el tiempo máximo real dentro de la ventana y se trunca a múltiplos completos de `bin_seconds`.
-- Se calcula:
-  - Número de eventos coincidentes N.
-  - Duración efectiva Δt (s) tras truncado.
-  - Tasa media: \( R_\theta = N/\Delta t \).
-  - Error estadístico (Poisson): \( \sigma_\theta = \sqrt{N}/\Delta t \).
+## Why the flux looks flat
 
-### 3. Normalización
-- Se selecciona el ángulo de referencia 0° si está presente.
-- Tasa normalizada: \( I(\theta)/I(0°) = R_\theta / R_{0} \).
-- Propagación de incertidumbre (variables independientes):
-$$\sigma_{\text{norm}} = \sqrt{\left(\frac{\sigma_\theta}{R_0}\right)^2 + \left(\frac{R_\theta\,\sigma_0}{R_0^2}\right)^2 }$$
+The measured profile is flat and not even monotonic: it falls to 0.845 at 15
+degrees and rises to 0.950 at 25. No `cos^n` with n > 0 can rise anywhere, so
+if that rise were real it would rule out the entire family. On its own the rise
+is worth 1.47 sigma, which is not enough to assert it; the chi-square of 372.9
+is what carries the conclusion.
 
-### 4. Ajuste cos^nθ
-- Se usan los puntos normalizados de ángulos 0°–90° (se excluye 360° si existe).
-- Búsqueda en rejilla n ∈ [0,5] (paso 0.01) + refinamiento local ±0.05.
-- Función: \( f(\theta) = \cos^n(\theta) \) (θ en radianes para el ajuste interno).
-- Estadístico:
-$$\chi^2 = \sum_i \left(\frac{y_i - f(\theta_i)}{\sigma_i}\right)^2, \quad \chi^2_{red} = \chi^2 / \text{dof}$$
-- dof = N − 1 (un parámetro n).
+Three explanations are consistent with the data, and **this data set cannot
+distinguish between them**:
 
-### 5. Ajuste lineal
-- Modelo: \( I(\theta) = a + b\theta \) (θ en grados o radianes según `--angle-radians`).
-- Ajuste por mínimos cuadrados ponderados (pesos 1/σ²).
-- dof = N − 2.
+1. **Wide geometric acceptance.** A short, wide two-scintillator telescope
+   accepts nearly a hemisphere, and its rate barely depends on orientation
+   however strongly the underlying flux is modulated. The detector geometry was
+   never recorded, so this cannot be corrected or ruled out. It is the principal
+   limitation of this analysis.
+2. **An accidental component.** `Coincident == 1` for all 4760 events and no
+   singles were recorded, so the accidental rate cannot be estimated, subtracted
+   or bounded from these files.
+3. **An undocumented angular convention.** There is no record of whether the
+   angles are zenith or azimuth, what they are measured from, or with what
+   precision.
 
-### 6. Curva teórica cos²θ
-- Se dibuja si se usa `--show-cos2` para comparar visualmente con los datos.
-
-### 7. Exportación CSV
-Si se usa `--angle-stats-csv` se escribe un archivo con columnas:
-- angle, counts, duration_s, mean_rate, rate_err
-- normalized_rate, normalized_err
-- (si ajustes activados) parámetros de cos^n y lineal con sus χ²_red y dof.
+In the fitted models these three collapse into a single background term. No
+claim is made as if they could be separated. See
+[docs/dataset.md](docs/dataset.md) section 4.
 
 ---
-## Uso (Ejemplos)
-Requiere Python ≥ 3.10 y paquetes: numpy, pandas, matplotlib.
 
-### Entorno virtual (opcional)
+## Repository layout
+
+```
+muon-angle-analysis/
+  README.md                     this document
+  docs/
+    methodology.md              numbered, citable analysis rules
+    dataset.md                  what is known and, above all, what is not
+  scripts/
+    00_ingest.py                read and inventory the raw runs
+    01_validation.py            data quality gate
+    02_rates.py                 live-time corrected rates
+    03_timeseries.py            per-run stability
+    04_normalization.py         I(theta)/I(0) and the cos^2 contrast
+    05_fits.py                  Poisson likelihood inference
+    06_systematics.py           systematics and the reassessment
+    90_report_figures.py        README figures, from results/ only
+    check_reproducibility.py    published results against a fresh run
+    lib_muon/                   shared library
+  results/
+    tables/  fits/  figures/    versioned products, _vN
+  data/raw/                     the eight raw runs, 256 kB
+  tests/                        76 tests, including the full pipeline
+  requirements.txt              pinned versions
+```
+
+Conventions, described in full in [docs/methodology.md](docs/methodology.md)
+section 6:
+
+- **The numbering is the execution order.** 00 to 06 analyse, 90 and above
+  present and perform no fitting.
+- **No script overwrites a result.** Each run writes `_vN`; the suffix lives in
+  the product, never in the script name.
+- **Results are versioned.** Every figure and table in this README is in the
+  repository, and every number in it is traceable to the run that produced it.
+- **Every JSON carries** the commit hash, the parameters and the seed.
+- Products come paired: `.json` and `.txt` for tables, PDF and PNG for figures.
+
+---
+
+## Reproducing the analysis
+
+Requires Python 3.11 or newer.
+
 ```bash
 python3 -m venv .venv
-source .venv/bin/activate
-pip install numpy pandas matplotlib
+.venv/bin/pip install -r requirements.txt
 ```
 
-### Ejemplo básico
+Run the pipeline in order, from the repository root:
+
 ```bash
-python3 analysis/muonalyze.py \
-  --data-dir second \
-  --variant 1 \
-  --out salida_basica
+.venv/bin/python scripts/00_ingest.py
+.venv/bin/python scripts/01_validation.py
+.venv/bin/python scripts/02_rates.py
+.venv/bin/python scripts/03_timeseries.py
+.venv/bin/python scripts/04_normalization.py
+.venv/bin/python scripts/05_fits.py
+.venv/bin/python scripts/06_systematics.py
+.venv/bin/python scripts/90_report_figures.py
 ```
 
-### Seleccionar ángulos explícitos
+Each script writes a new `_vN` alongside the versioned results rather than
+replacing them. To confirm that the published numbers reproduce on your machine:
+
 ```bash
-python3 analysis/muonalyze.py \
-  --data-dir second \
-  --variant 1 \
-  --angles 0,45,90 \
-  --out salida_0_45_90
+.venv/bin/python scripts/check_reproducibility.py
 ```
 
-### Rango con paso
+It compares every numeric leaf of the committed `_v1` products against your
+fresh run and exits non-zero on any disagreement beyond floating-point noise.
+
+Tests:
+
 ```bash
-python3 analysis/muonalyze.py \
-  --data-dir second \
-  --variant 1 \
-  --angles 0-90:15 \
-  --out salida_rango
+.venv/bin/pytest tests/
 ```
 
-### Ventana temporal acotada (0–300 s)
-```bash
-python3 analysis/muonalyze.py \
-  --data-dir second \
-  --variant 1 \
-  --start-ms 0 --max-ms 300000 \
-  --out salida_0_300s
-```
-
-### Gráfico normalizado con ajustes y CSV
-```bash
-python3 analysis/muonalyze.py \
-  --data-dir second \
-  --variant 1 \
-  --angles 0,45,90 \
-  --start-ms 0 --max-ms 300000 \
-  --fit-cosn --fit-linear --show-cos2 --angle-radians \
-  --angle-stats-csv salida_0_45_90/angle_stats.csv \
-  --out salida_0_45_90
-```
-
-### Solo estadísticas sin gráfico angular
-```bash
-python3 analysis/muonalyze.py \
-  --data-dir second \
-  --variant 1 \
-  --angles 0,45,90 \
-  --angle-stats-csv solo_stats/angle_stats.csv \
-  --skip-angle-plot \
-  --out solo_stats
-```
+The suite includes a regression test for the `cos(90)` defect, recovery of a
+known exponent from synthetic data, a rate checked against a hand-computed case,
+and an end-to-end run of the whole pipeline. CI runs all of it plus the full
+pipeline on the real data, on Python 3.11 and 3.13.
 
 ---
-## Interpretación de Parámetros
-- **mean_rate** y **rate_err**: Flujo promedio y su error estadístico (Poisson) durante Δt.
-- **normalized_rate**: Flujo relativo a 0°. Útil para comparar forma angular.
-- **n (cos^n)**: Exponente que aplana o curva la función; valores típicos teóricos para muones cercanos a vertical ~2.
-- **a, b (lineal)**: Parámetros de una aproximación simplificada; b indica pendiente (decaimiento por radian/grado). Con pocos puntos puede sobre-ajustar.
-- **χ², χ²_red, dof**: Calidad del ajuste. χ²_red ≈ 1 sugiere consistencia entre modelo y errores. Valores muy bajos pueden indicar sobre-ajuste, muy altos mal modelo o errores subestimados.
+
+## Documentation
+
+- **[docs/methodology.md](docs/methodology.md)**: the analysis rules, numbered
+  so code and report can cite them. Includes the mandatory rule that every
+  candidate systematic is compared against its own Poisson expectation before
+  entering the budget (rule 5.1), which is what keeps statistical fluctuation
+  from being reported as a systematic.
+- **[docs/dataset.md](docs/dataset.md)**: the files, the format, the two known
+  defects, and section 4 on what is not recorded about the setup, which
+  constrains this analysis more than anything that is.
 
 ---
-## Limitaciones y Recomendaciones
-1. Tres ángulos (0°,45°,90°) no bastan para distinguir bien cos^n de una recta. Usa más ángulos (15°,30°,60°,75°).
-2. El ángulo 90° suele tener flujo muy reducido teóricamente; verificar alineación real si aparece alto.
-3. Considerar correcciones geométricas (proyección de área ∝ cos θ) antes de comparar con cos^n.
-4. Aumentar tiempo de adquisición para reducir errores relativos (√N).
-5. Añadir intervalo de confianza para n (región donde χ² = χ²_min + 1) si se requiere rigor.
+
+## Limitations
+
+1. **No geometric acceptance correction is possible.** The detector geometry
+   was not recorded. This is the largest single limitation and no amount of
+   reanalysis addresses it; it needs a tape measure applied to the apparatus.
+2. **The accidental rate is not estimable.** No singles were recorded.
+3. **The angular convention is not documented.** The mapping from file labels to
+   physical angles is assumed, not known.
+4. **One repeatability control, at 1.33 sigma.** The dominant systematic rests
+   on a single repeated measurement. Repeating every angle would turn it from an
+   estimated scale into a measured one.
+5. **Longer runs would not help.** At about 1.8 counts per second, six minutes
+   already gives a 4 % statistical error, smaller than the 7.45 % run-to-run
+   systematic. The measurement is limited by reproducibility, not by statistics.
+
+What would be needed to do better, in order of value, is in
+[docs/dataset.md](docs/dataset.md) section 6.
 
 ---
-## Posibles Extensiones (Next Steps)
-- Panel de residuales (Datos − Modelo) para cada ajuste.
-- Cálculo de AIC/BIC para comparar modelos cos^n vs lineal.
-- Bootstrap para estimar incertidumbres robustas de la tasa normalizada.
-- Corrección por eficiencia / dead time más avanzada.
-- Análisis multi-run combinando varias carpetas de datos.
 
----
-## Mantenimiento Rápido
-- Código principal: `analysis/muonalyze.py`
-- Ajustar listas de ángulos permitidos en `ALLOWED_ANGLES` si se agregan nuevos.
-- Revisar parseo si cambia el formato de los archivos.
+## License
 
----
-## Contacto / Créditos
-- Email: av18012@ues.edu.sv
-- Proyecto educativo de análisis de flujo de muones. Ajustes y fórmulas basadas en estadística básica (Poisson) y comparación simple de modelos.
+MIT. See [LICENSE](LICENSE).
+
+Raw data recorded with a [CosmicWatch](http://www.cosmicwatch.lns.mit.edu/)
+desktop muon detector.
