@@ -1,0 +1,93 @@
+05_fits_v1
+generated: 2026-08-10T21:39:25+00:00
+commit:    d73631959be50bd267aa204063b1027cf1f8cf6f (committed inputs)
+==============================================================================
+OBSERVABLE: number of inter-event intervals, N-1, Poisson with mean R*T_live.
+7 points, from 0 to 90 degrees. The 360 degree control is handled in 06_systematics.
+
+ ang    N-1    T_live  cos(theta)
+----------------------------------
+   0    676    338.27    1.000000
+   5    589    327.07    0.996195
+  15    493    291.84    0.965926
+  25    765    403.10    0.906308
+  35    543    293.24    0.819152
+  45    711    395.27    0.707107
+  90    446    277.05    0.000000
+
+==============================================================================
+FITS
+==============================================================================
+A_constant  (1 parameters)
+   R_hz = 1.8157
+   -logL = 37.362   AIC = 76.72   BIC = 76.67
+   deviance = 17.16 with 6 dof, p = 0.0087
+
+B_free_cosn  (2 parameters)
+   -logL = INFINITE. The model predicts exactly 0 counts at 90 degrees and 446 were observed.
+   Its likelihood is rigorously zero: there is no AIC or BIC to compare.
+   This follows from clamping cos(90) = 0. The previous analysis could fit it only
+   because it evaluated (6.123e-17)**n, which for small n is of order 1.
+
+C_fixed_cos2  (1 parameters)
+   -logL = INFINITE. The model predicts exactly 0 counts at 90 degrees and 446 were observed.
+   Its likelihood is rigorously zero: there is no AIC or BIC to compare.
+   This follows from clamping cos(90) = 0. The previous analysis could fit it only
+   because it evaluated (6.123e-17)**n, which for small n is of order 1.
+
+D_signal_background  (3 parameters)
+   S_hz = 0.2523, B_hz = 1.6098, n = 0.6622, modulated_fraction = 0.1355
+   -logL = 33.357   AIC = 72.71   BIC = 72.55
+   deviance = 9.15 with 4 dof, p = 0.0575
+
+E_signal_background_n2  (2 parameters)
+   S_hz = 0.2346, B_hz = 1.6482, n = 2.0000, modulated_fraction = 0.1246
+   -logL = 33.848   AIC = 71.70   BIC = 71.59
+   deviance = 10.13 with 5 dof, p = 0.0716
+
+==============================================================================
+RESULTS
+==============================================================================
+
+1. Single rate (constant model)
+   R = 1.8157 1/s, 68 % interval [1.7879, 1.8438]
+   deviance = 17.16 with 6 dof, p = 0.0087
+   This is NOT a good fit under pure Poisson statistics. The data are
+   more scattered than counting statistics alone allows. The excess
+   scatter is quantified in 06_systematics, where it turns out to be
+   the size of the run-to-run systematic that the 360 degree control
+   itself measures.
+
+2. How much angular modulation the data admit (model E, n = 2 fixed)
+   S = 0.2346 1/s [0.1470, 0.3210] at 68 %
+   B = 1.6482 1/s
+   modulated fraction at 0 degrees = 0.1246
+   UPPER BOUND AT 95 %: S < 0.3762 1/s, that is a modulated
+   fraction below 19.5 % (statistics only; the
+   published bound, with the systematic folded in, is in 06_systematics).
+
+3. Comparison against the constant-rate hypothesis
+   Delta(-2lnL) = 7.028 with 1 dof, p = 0.0080
+   Under pure Poisson statistics the modulated component DOES improve
+   the fit.
+
+   THIS P-VALUE IS NOT THE CONCLUSION, and taking it for one would be
+   the very error this analysis exists to avoid. It assumes counting
+   statistics is the only source of uncertainty, and this data set
+   contains the proof that it is not: the 360 degree file repeats the
+   0 degree measurement and differs by 7.5 %. A run-to-run systematic
+   of only 3.9 % is enough for this preference to stop being
+   significant, well below what the control itself measures. The
+   reassessment is in 06_systematics and that is the one that stands.
+   Further statistical caveat: S is bounded to non-negative values, so
+   the parameter sits on the boundary of its space and the asymptotic
+   distribution is not exactly chi-square.
+
+4. Pearson residuals against the constant model
+     0 deg: N-1 =  676, expected =   614.2, residual =  +2.49 sigma
+     5 deg: N-1 =  589, expected =   593.9, residual =  -0.20 sigma
+    15 deg: N-1 =  493, expected =   529.9, residual =  -1.60 sigma
+    25 deg: N-1 =  765, expected =   731.9, residual =  +1.22 sigma
+    35 deg: N-1 =  543, expected =   532.4, residual =  +0.46 sigma
+    45 deg: N-1 =  711, expected =   717.7, residual =  -0.25 sigma
+    90 deg: N-1 =  446, expected =   503.0, residual =  -2.54 sigma

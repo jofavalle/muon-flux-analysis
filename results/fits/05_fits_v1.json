@@ -1,0 +1,178 @@
+{
+  "provenance": {
+    "generated_utc": "2026-08-10T21:39:25+00:00",
+    "git": {
+      "commit": "d73631959be50bd267aa204063b1027cf1f8cf6f",
+      "branch": "main",
+      "inputs_clean": true
+    },
+    "seed": 20260810,
+    "python": "3.11.2",
+    "numpy": "2.4.6",
+    "platform": "Linux-6.1.0-52-amd64-x86_64-with-glibc2.36",
+    "parameters": {
+      "excluded_control_angle": 360,
+      "delta_bound_95": 1.353
+    }
+  },
+  "angles_deg": [
+    0.0,
+    5.0,
+    15.0,
+    25.0,
+    35.0,
+    45.0,
+    90.0
+  ],
+  "counts": [
+    676.0,
+    589.0,
+    493.0,
+    765.0,
+    543.0,
+    711.0,
+    446.0
+  ],
+  "live_times_s": [
+    338.272103,
+    327.066851,
+    291.83564199999995,
+    403.101538,
+    293.243724,
+    395.27443500000004,
+    277.04507
+  ],
+  "clamped_cosine": [
+    1.0,
+    0.9961946980917455,
+    0.9659258262890683,
+    0.9063077870366499,
+    0.8191520442889918,
+    0.7071067811865476,
+    0.0
+  ],
+  "cos_eps": 1e-12,
+  "fits": {
+    "A_constant": {
+      "name": "constant",
+      "parameters": {
+        "R_hz": 1.8156885927637472
+      },
+      "nll": 37.3622448771639,
+      "nll_infinite": false,
+      "n_parameters": 1,
+      "n_points": 7,
+      "dof": 6,
+      "aic": 76.7244897543278,
+      "bic": 76.67039990338311,
+      "converged": true,
+      "deviance": 17.158244834899,
+      "p_value": 0.008718931825391843
+    },
+    "B_free_cosn": {
+      "name": "pure cos^n",
+      "parameters": {
+        "R_hz": 1.8156885927637472,
+        "n": 0.0
+      },
+      "nll": null,
+      "nll_infinite": true,
+      "n_parameters": 2,
+      "n_points": 7,
+      "dof": 5,
+      "aic": null,
+      "bic": null,
+      "converged": false,
+      "deviance": 17.158244834899,
+      "p_value": 0.004209256250155577
+    },
+    "C_fixed_cos2": {
+      "name": "fixed cos^2",
+      "parameters": {
+        "R_hz": 2.542976038446076,
+        "n": 2.0
+      },
+      "nll": null,
+      "nll_infinite": true,
+      "n_parameters": 1,
+      "n_points": 7,
+      "dof": 6,
+      "aic": null,
+      "bic": null,
+      "converged": false,
+      "deviance": null,
+      "p_value": 0.0
+    },
+    "D_signal_background": {
+      "name": "signal+background",
+      "parameters": {
+        "S_hz": 0.252267563171937,
+        "B_hz": 1.609763573364777,
+        "n": 0.6622147375993835,
+        "modulated_fraction": 0.1354797770144393
+      },
+      "nll": 33.357079681241885,
+      "nll_infinite": false,
+      "n_parameters": 3,
+      "n_points": 7,
+      "dof": 4,
+      "aic": 72.71415936248377,
+      "bic": 72.55188980964971,
+      "converged": true,
+      "deviance": 9.147914443060202,
+      "p_value": 0.05750680633477556
+    },
+    "E_signal_background_n2": {
+      "name": "signal+background (n=2 fixed)",
+      "parameters": {
+        "S_hz": 0.23459109377806137,
+        "B_hz": 1.6481901924111018,
+        "n": 2.0,
+        "modulated_fraction": 0.12459816522442957
+      },
+      "nll": 33.848009847040885,
+      "nll_infinite": false,
+      "n_parameters": 2,
+      "n_points": 7,
+      "dof": 5,
+      "aic": 71.69601969408177,
+      "bic": 71.5878399921924,
+      "converged": true,
+      "deviance": 10.12977477465699,
+      "p_value": 0.0716405434830756
+    }
+  },
+  "constant": {
+    "R_hz": 1.8156885927637472,
+    "interval_68": [
+      1.7878914415124671,
+      1.8437723781322102
+    ]
+  },
+  "modulation_n2": {
+    "S_hz": 0.23459109377806137,
+    "S_interval_68": [
+      0.14703039239952867,
+      0.32103527366252926
+    ],
+    "B_hz": 1.6481901924111018,
+    "modulated_fraction": 0.12459816522442957,
+    "S_bound_95": 0.3762017336818586,
+    "B_at_bound_95": 1.550205411753333,
+    "modulated_fraction_bound_95": 0.19528672044915585
+  },
+  "likelihood_ratio_constant_vs_modulated": {
+    "delta_2lnL": 7.028470060246036,
+    "dof": 1,
+    "p_value": 0.008022386256691761
+  },
+  "constant_pearson_residuals": [
+    2.493774601136893,
+    -0.1990864043099728,
+    -1.6022571699570525,
+    1.2232353140356866,
+    0.4576761640435474,
+    -0.24991876702083166,
+    -2.54266412510742
+  ]
+}

@@ -1,0 +1,84 @@
+{
+  "provenance": {
+    "generated_utc": "2026-08-10T21:39:21+00:00",
+    "git": {
+      "commit": "d73631959be50bd267aa204063b1027cf1f8cf6f",
+      "branch": "main",
+      "inputs_clean": true
+    },
+    "seed": 20260810,
+    "python": "3.11.2",
+    "numpy": "2.4.6",
+    "platform": "Linux-6.1.0-52-amd64-x86_64-with-glibc2.36",
+    "parameters": {
+      "bin_seconds": 10.0,
+      "rolling_seconds": 60.0
+    }
+  },
+  "series": [
+    {
+      "angle_deg": 0,
+      "n_bins": 37,
+      "mean_hz": 1.8081081081081083,
+      "spread_hz": 0.4283080341254653,
+      "poisson_expected_spread_hz": 0.42521854476352605,
+      "spread_ratio": 1.007265650569538
+    },
+    {
+      "angle_deg": 5,
+      "n_bins": 36,
+      "mean_hz": 1.636111111111111,
+      "spread_hz": 0.34573012739368597,
+      "poisson_expected_spread_hz": 0.4044887033170532,
+      "spread_ratio": 0.8547337034594261
+    },
+    {
+      "angle_deg": 15,
+      "n_bins": 32,
+      "mean_hz": 1.540625,
+      "spread_hz": 0.3525437694457243,
+      "poisson_expected_spread_hz": 0.39250796170268953,
+      "spread_ratio": 0.8981824672202786
+    },
+    {
+      "angle_deg": 25,
+      "n_bins": 44,
+      "mean_hz": 1.7318181818181815,
+      "spread_hz": 0.42999615604662794,
+      "poisson_expected_spread_hz": 0.4161511962998763,
+      "spread_ratio": 1.0332690615090172
+    },
+    {
+      "angle_deg": 35,
+      "n_bins": 32,
+      "mean_hz": 1.6875,
+      "spread_hz": 0.3379626458648944,
+      "poisson_expected_spread_hz": 0.4107919181288746,
+      "spread_ratio": 0.8227100654859231
+    },
+    {
+      "angle_deg": 45,
+      "n_bins": 43,
+      "mean_hz": 1.6418604651162794,
+      "spread_hz": 0.4352131571516689,
+      "poisson_expected_spread_hz": 0.4051987740746854,
+      "spread_ratio": 1.0740732326881406
+    },
+    {
+      "angle_deg": 90,
+      "n_bins": 30,
+      "mean_hz": 1.4733333333333332,
+      "spread_hz": 0.39322032274823016,
+      "poisson_expected_spread_hz": 0.3838402445462608,
+      "spread_ratio": 1.0244374536939387
+    },
+    {
+      "angle_deg": 360,
+      "n_bins": 31,
+      "mean_hz": 1.6806451612903224,
+      "spread_hz": 0.36932314274481837,
+      "poisson_expected_spread_hz": 0.40995672470278155,
+      "spread_ratio": 0.9008832408166435
+    }
+  ]
+}

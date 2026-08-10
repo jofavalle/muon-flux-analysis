@@ -1,0 +1,32 @@
+04_normalization_v1
+generated: 2026-08-10T21:39:23+00:00
+commit:    d73631959be50bd267aa204063b1027cf1f8cf6f (committed inputs)
+==============================================================================
+ ang    R_live      I/I0    sigma    cos^2      dev
+------------------------------------------------------
+   0    1.9984    1.0000   0.0544   1.0000    +0.0s
+   5    1.8009    0.9012   0.0508   0.9924    -1.8s
+  15    1.6893    0.8453   0.0501   0.9330    -1.8s
+  25    1.8978    0.9497   0.0501   0.8214    +2.6s
+  35    1.8517    0.9266   0.0534   0.6710    +4.8s
+  45    1.7988    0.9001   0.0484   0.5000    +8.3s
+  90    1.6098    0.8056   0.0491   0.0000   +16.4s
+ 360    1.8495    0.9255   0.0537      ---      ---  <- repeatability control
+------------------------------------------------------
+
+chi2 of the 7 points from 0 to 90 degrees against pure cos^2: 372.9
+I(90)/I(0) measured = 0.8056 +- 0.0491, against the 0 that cos^2 predicts.
+
+MONOTONICITY. Every cos^n model with n > 0 decreases monotonically over
+[0, 90] degrees. The measured profile does not:
+  rises from 15 to 25 degrees: +0.1043 (+1.47 sigma)
+
+This argument is of a different kind from the chi-square, and the two
+should not be conflated. The chi-square measures discrepancy and is
+the evidence carrying the conclusion. Non-monotonicity would be, IF
+the rise were real, a structural falsification of the entire cos^n
+family: no member can rise, however it is fitted. But the rise on its
+own is worth 1.47 sigma, which is not enough to assert it, still less
+without having pre-specified that these two points would be examined.
+It points the same way as the chi-square without being independent of
+it; it neither replaces nor outweighs it.
