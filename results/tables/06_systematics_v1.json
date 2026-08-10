@@ -1,0 +1,106 @@
+{
+  "procedencia": {
+    "generado_utc": "2026-08-10T21:16:03+00:00",
+    "git": {
+      "commit": "14f282edb0be5c625b5781d63bba4cc9430f596e",
+      "rama": "main",
+      "arbol_limpio": false
+    },
+    "semilla": 20260810,
+    "python": "3.11.2",
+    "numpy": "2.4.6",
+    "plataforma": "Linux-6.1.0-52-amd64-x86_64-with-glibc2.36",
+    "parametros": {
+      "angulo_control": 360,
+      "angulo_referencia": 0
+    }
+  },
+  "fuentes": [
+    {
+      "fuente": "repetibilidad entre corridas",
+      "efecto_relativo": 0.07451422359986848,
+      "medida_o_estimada": "medida",
+      "detalle": "control de 360 grados frente a 0 grados, 1.39 sigma"
+    },
+    {
+      "fuente": "tiempo vivo (sobre cocientes)",
+      "efecto_relativo": 0.0020709036859457644,
+      "medida_o_estimada": "medida",
+      "detalle": "efecto sobre la tasa absoluta: 10.12 %"
+    },
+    {
+      "fuente": "ventana temporal (exceso sobre estadistica)",
+      "efecto_relativo": 0.0,
+      "medida_o_estimada": "medida",
+      "detalle": "observado 5.45 %, esperado por estadistica 4.15 %; solo el exceso cuenta como sistematica"
+    },
+    {
+      "fuente": "angulo de referencia",
+      "efecto_relativo": 2.220446049250313e-16,
+      "medida_o_estimada": "medida",
+      "detalle": "solo reescala; el error de la referencia se trata en 05_fits"
+    },
+    {
+      "fuente": "tamano de bin",
+      "efecto_relativo": 0.0,
+      "medida_o_estimada": "eliminada por construccion",
+      "detalle": "antes 0.4 % sobre la tasa; ahora el binning no entra en la fisica"
+    }
+  ],
+  "sistematico_dominante": 0.07451422359986848,
+  "sistematico_critico_para_significancia": 0.038808176565495615,
+  "sistematico_para_compatibilidad_constante": 0.025953509691478083,
+  "barrido": [
+    {
+      "f_sys": 0.0,
+      "chi2_constante": 17.3696812643872,
+      "p_constante": 0.008016453659675127,
+      "S_hz": 0.22635760912541597,
+      "delta_chi2": 6.995038621451842,
+      "p_modulacion": 0.008173594505999717
+    },
+    {
+      "f_sys": 0.02,
+      "chi2_constante": 14.169821132623206,
+      "p_constante": 0.027795637313277166,
+      "S_hz": 0.22493233405266833,
+      "delta_chi2": 5.731799391467952,
+      "p_modulacion": 0.01666040311980619
+    },
+    {
+      "f_sys": 0.03,
+      "chi2_constante": 11.531370586739408,
+      "p_constante": 0.07327803712138399,
+      "S_hz": 0.22380581453985218,
+      "delta_chi2": 4.685530333771076,
+      "p_modulacion": 0.030417672867146348
+    },
+    {
+      "f_sys": 0.05,
+      "chi2_constante": 7.24222481816176,
+      "p_constante": 0.29902625528771537,
+      "S_hz": 0.2220648283049868,
+      "delta_chi2": 2.968757422129145,
+      "p_modulacion": 0.08488703352773538
+    },
+    {
+      "f_sys": 0.07451422359986848,
+      "chi2_constante": 4.243140395114895,
+      "p_constante": 0.6438102380885067,
+      "S_hz": 0.2209111786522659,
+      "delta_chi2": 1.7519092408906576,
+      "p_modulacion": 0.18563689412269155
+    },
+    {
+      "f_sys": 0.1,
+      "chi2_constante": 2.6477488149703516,
+      "p_constante": 0.8515795936141353,
+      "S_hz": 0.2203179949586456,
+      "delta_chi2": 1.0977440896741075,
+      "p_modulacion": 0.2947617158617566
+    }
+  ],
+  "cota_fraccion_modulada_solo_estadistica": 0.19528672044915585,
+  "cota_fraccion_modulada_con_sistematico": 0.2536289867345566,
+  "S_cota_hz": 0.4954407600638678
+}

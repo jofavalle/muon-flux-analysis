@@ -77,16 +77,64 @@ def siguiente_version(directorio: str | Path, base: str, extension: str = "json"
     return max(usados) + 1 if usados else 1
 
 
+def ultima_version(directorio: str | Path, base: str, extension: str = "json") -> int | None:
+    """Mayor sufijo _vN existente para `base`, o None si no hay ninguno."""
+    siguiente = siguiente_version(directorio, base, extension)
+    return siguiente - 1 if siguiente > 1 else None
+
+
+def leer_producto(directorio: str | Path, base: str) -> dict[str, Any]:
+    """Lee el JSON mas reciente de `base`, que es como se encadena el pipeline.
+
+    Lanza FileNotFoundError con el paso que falta, de modo que ejecutar un
+    script fuera de orden diga que hay que correr antes en vez de fallar con
+    un error de mas abajo.
+    """
+    directorio = Path(directorio)
+    version = ultima_version(directorio, base)
+    if version is None:
+        raise FileNotFoundError(
+            f"no hay ningun {base}_vN.json en {directorio}. "
+            f"Ejecuta antes el paso {base.split('_')[0]} del pipeline."
+        )
+    ruta = directorio / f"{base}_v{version}.json"
+    return json.loads(ruta.read_text(encoding="utf-8"))
+
+
+def _limpiar_no_finitos(valor: Any) -> Any:
+    """JSON no tiene infinito ni NaN. Se escriben como null, que es lo que
+    significan aqui: un ajuste sin valor finito, no un cero.
+
+    Recorre el arbol entero antes de serializar. No basta con el `default=` de
+    json.dumps, que no se invoca para floats: json escribiria `Infinity` y
+    `NaN`, que no son JSON valido y que ningun otro lector aceptaria.
+    """
+    if isinstance(valor, (np.floating, float)):
+        v = float(valor)
+        return v if np.isfinite(v) else None
+    if isinstance(valor, np.integer):
+        return int(valor)
+    if isinstance(valor, np.bool_):
+        return bool(valor)
+    if isinstance(valor, np.ndarray):
+        return _limpiar_no_finitos(valor.tolist())
+    if isinstance(valor, dict):
+        return {k: _limpiar_no_finitos(v) for k, v in valor.items()}
+    if isinstance(valor, (list, tuple)):
+        return [_limpiar_no_finitos(x) for x in valor]
+    return valor
+
+
 def _json_serializable(objeto: Any) -> Any:
-    if isinstance(objeto, (np.integer,)):
+    """Solo se invoca para tipos que json no sabe serializar por si mismo."""
+    if isinstance(objeto, np.integer):
         return int(objeto)
-    if isinstance(objeto, (np.floating,)):
-        valor = float(objeto)
-        return valor if np.isfinite(valor) else None
+    if isinstance(objeto, np.floating):
+        return _limpiar_no_finitos(float(objeto))
     if isinstance(objeto, np.ndarray):
-        return [_json_serializable(x) for x in objeto.tolist()]
-    if isinstance(objeto, float) and not np.isfinite(objeto):
-        return None
+        return _limpiar_no_finitos(objeto.tolist())
+    if isinstance(objeto, np.bool_):
+        return bool(objeto)
     raise TypeError(f"no serializable a JSON: {type(objeto)}")
 
 
@@ -110,9 +158,11 @@ def escribir_producto(
     ruta_json = directorio / f"{base}_v{version}.json"
     ruta_txt = directorio / f"{base}_v{version}.txt"
 
-    contenido = {"procedencia": sello(parametros, semilla), **datos}
+    contenido = _limpiar_no_finitos({"procedencia": sello(parametros, semilla),
+                                     **datos})
     ruta_json.write_text(
-        json.dumps(contenido, indent=2, ensure_ascii=False, default=_json_serializable),
+        json.dumps(contenido, indent=2, ensure_ascii=False, allow_nan=False,
+                   default=_json_serializable),
         encoding="utf-8",
     )
 

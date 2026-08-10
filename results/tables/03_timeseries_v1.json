@@ -1,0 +1,84 @@
+{
+  "procedencia": {
+    "generado_utc": "2026-08-10T21:15:57+00:00",
+    "git": {
+      "commit": "14f282edb0be5c625b5781d63bba4cc9430f596e",
+      "rama": "main",
+      "arbol_limpio": false
+    },
+    "semilla": 20260810,
+    "python": "3.11.2",
+    "numpy": "2.4.6",
+    "plataforma": "Linux-6.1.0-52-amd64-x86_64-with-glibc2.36",
+    "parametros": {
+      "bin_seconds": 10.0,
+      "rolling_seconds": 60.0
+    }
+  },
+  "series": [
+    {
+      "angulo_deg": 0,
+      "n_bins": 37,
+      "media_hz": 1.8081081081081083,
+      "dispersion_hz": 0.4283080341254653,
+      "dispersion_poisson_esperada_hz": 0.42521854476352605,
+      "cociente_dispersion": 1.007265650569538
+    },
+    {
+      "angulo_deg": 5,
+      "n_bins": 36,
+      "media_hz": 1.636111111111111,
+      "dispersion_hz": 0.34573012739368597,
+      "dispersion_poisson_esperada_hz": 0.4044887033170532,
+      "cociente_dispersion": 0.8547337034594261
+    },
+    {
+      "angulo_deg": 15,
+      "n_bins": 32,
+      "media_hz": 1.540625,
+      "dispersion_hz": 0.3525437694457243,
+      "dispersion_poisson_esperada_hz": 0.39250796170268953,
+      "cociente_dispersion": 0.8981824672202786
+    },
+    {
+      "angulo_deg": 25,
+      "n_bins": 44,
+      "media_hz": 1.7318181818181815,
+      "dispersion_hz": 0.42999615604662794,
+      "dispersion_poisson_esperada_hz": 0.4161511962998763,
+      "cociente_dispersion": 1.0332690615090172
+    },
+    {
+      "angulo_deg": 35,
+      "n_bins": 32,
+      "media_hz": 1.6875,
+      "dispersion_hz": 0.3379626458648944,
+      "dispersion_poisson_esperada_hz": 0.4107919181288746,
+      "cociente_dispersion": 0.8227100654859231
+    },
+    {
+      "angulo_deg": 45,
+      "n_bins": 43,
+      "media_hz": 1.6418604651162794,
+      "dispersion_hz": 0.4352131571516689,
+      "dispersion_poisson_esperada_hz": 0.4051987740746854,
+      "cociente_dispersion": 1.0740732326881406
+    },
+    {
+      "angulo_deg": 90,
+      "n_bins": 30,
+      "media_hz": 1.4733333333333332,
+      "dispersion_hz": 0.39322032274823016,
+      "dispersion_poisson_esperada_hz": 0.3838402445462608,
+      "cociente_dispersion": 1.0244374536939387
+    },
+    {
+      "angulo_deg": 360,
+      "n_bins": 31,
+      "media_hz": 1.6806451612903224,
+      "dispersion_hz": 0.36932314274481837,
+      "dispersion_poisson_esperada_hz": 0.40995672470278155,
+      "cociente_dispersion": 0.9008832408166435
+    }
+  ]
+}

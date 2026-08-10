@@ -1,0 +1,25 @@
+00_ingest_v1
+generado: 2026-08-10T21:15:51+00:00
+commit:   14f282edb0be5c625b5781d63bba4cc9430f596e (ARBOL SUCIO)
+==============================================================================
+ ang  archivo     N  coinc   ventana   muerto      vivo  muerta%  malas  arranque
+----------------------------------------------------------------------------------------
+   0   000deg   677    677    372.86    34.59    338.27     9.28      0         2
+   5   005deg   590    590    360.03    32.97    327.07     9.16      0         2
+  15   015deg   494    494    321.20    29.37    291.84     9.14      1         0
+  25   025deg   766    766    444.11    41.00    403.10     9.23      0         2
+  35   035deg   544    544    323.01    29.77    293.24     9.22      0         1
+  45   045deg   712    712    435.41    40.14    395.27     9.22      0         0
+  90   090deg   447    447    304.74    27.70    277.05     9.09      0         0
+ 360   360deg   530    530    314.96    28.94    286.03     9.19      0         1
+----------------------------------------------------------------------------------------
+total: 4760 eventos en 8 corridas, 1 linea(s) rechazada(s), 8 fila(s) con la lectura de arranque del sensor.
+
+Orden de columnas: la cabecera declara
+  Event TimeStamp[ms] ADC1 ADC2 SiPM[mV] Temp[C] Pressure[Pa] DeadTime[us] Coincident Name
+y los datos vienen en el orden
+  Event TimeStamp[ms] ADC1 ADC2 SiPM[mV] Pressure[Pa] Temp[C] DeadTime[us] Coincident Name
+es decir con la presion antes que la temperatura. Verificado archivo a archivo contra rangos fisicos.
+
+Alertas:
+  -  15 grados: 1 linea(s) rechazada(s): ['118  | Hexa address:  0x76']

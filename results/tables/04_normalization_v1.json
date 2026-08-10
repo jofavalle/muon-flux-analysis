@@ -1,0 +1,102 @@
+{
+  "procedencia": {
+    "generado_utc": "2026-08-10T21:15:59+00:00",
+    "git": {
+      "commit": "14f282edb0be5c625b5781d63bba4cc9430f596e",
+      "rama": "main",
+      "arbol_limpio": false
+    },
+    "semilla": 20260810,
+    "python": "3.11.2",
+    "numpy": "2.4.6",
+    "plataforma": "Linux-6.1.0-52-amd64-x86_64-with-glibc2.36",
+    "parametros": {
+      "angulo_referencia": 0
+    }
+  },
+  "angulo_referencia": 0,
+  "chi2_contra_cos2": 372.9336502265023,
+  "n_puntos_fisicos": 7,
+  "subidas_no_monotonas": [
+    {
+      "de_deg": 15.0,
+      "a_deg": 25.0,
+      "salto": 0.1043228392799489,
+      "sigmas": 1.472474440364236
+    }
+  ],
+  "filas": [
+    {
+      "angulo_deg": 0,
+      "tasa_viva_hz": 1.9983912182081416,
+      "error_hz": 0.07686120070031313,
+      "normalizada": 1.0,
+      "error_normalizada": 0.05439282932204211,
+      "cos2_predicho": 1.0,
+      "desviacion_sigma": 0.0
+    },
+    {
+      "angulo_deg": 5,
+      "tasa_viva_hz": 1.8008550796240737,
+      "error_hz": 0.07420294085083907,
+      "normalizada": 0.901152418613414,
+      "error_normalizada": 0.050794012328461154,
+      "cos2_predicho": 0.9924038765061041,
+      "desviacion_sigma": -1.7965002902824354
+    },
+    {
+      "angulo_deg": 15,
+      "tasa_viva_hz": 1.6893070243969723,
+      "error_hz": 0.07608256194825758,
+      "normalizada": 0.8453334907624795,
+      "error_normalizada": 0.05006549602923723,
+      "cos2_predicho": 0.9330127018922194,
+      "desviacion_sigma": -1.751290171549224
+    },
+    {
+      "angulo_deg": 25,
+      "tasa_viva_hz": 1.8977848702725615,
+      "error_hz": 0.06861455679159097,
+      "normalizada": 0.9496563300424284,
+      "error_normalizada": 0.050129617664156634,
+      "cos2_predicho": 0.8213938048432696,
+      "desviacion_sigma": 2.558617663083999
+    },
+    {
+      "angulo_deg": 35,
+      "tasa_viva_hz": 1.851702033357072,
+      "error_hz": 0.07946414019575773,
+      "normalizada": 0.9265963623566168,
+      "error_normalizada": 0.05339728563826672,
+      "cos2_predicho": 0.6710100716628343,
+      "desviacion_sigma": 4.786503426882408
+    },
+    {
+      "angulo_deg": 45,
+      "tasa_viva_hz": 1.7987502783983484,
+      "error_hz": 0.06745840583377663,
+      "normalizada": 0.9000991707775812,
+      "error_normalizada": 0.04835266813983973,
+      "cos2_predicho": 0.5000000000000001,
+      "desviacion_sigma": 8.274603784437762
+    },
+    {
+      "angulo_deg": 90,
+      "tasa_viva_hz": 1.6098463690402431,
+      "error_hz": 0.07622843489668622,
+      "normalizada": 0.8055711786422444,
+      "error_normalizada": 0.04914276304384747,
+      "cos2_predicho": 0.0,
+      "desviacion_sigma": 16.392468163083873
+    },
+    {
+      "angulo_deg": 360,
+      "tasa_viva_hz": 1.8494826481345665,
+      "error_hz": 0.08041228904932898,
+      "normalizada": 0.9254857764001315,
+      "error_normalizada": 0.05372322655741669,
+      "cos2_predicho": null,
+      "desviacion_sigma": null
+    }
+  ]
+}

@@ -1,0 +1,93 @@
+05_fits_v1
+generado: 2026-08-10T21:16:01+00:00
+commit:   14f282edb0be5c625b5781d63bba4cc9430f596e (ARBOL SUCIO)
+==============================================================================
+OBSERVABLE: numero de intervalos entre eventos, N-1, Poisson de media R*T_vivo.
+7 puntos, de 0 a 90 grados. El control de 360 grados se trata en 06_systematics.
+
+ ang    N-1    T_vivo  cos(theta)
+----------------------------------
+   0    676    338.27    1.000000
+   5    589    327.07    0.996195
+  15    493    291.84    0.965926
+  25    765    403.10    0.906308
+  35    543    293.24    0.819152
+  45    711    395.27    0.707107
+  90    446    277.05    0.000000
+
+==============================================================================
+AJUSTES
+==============================================================================
+A_constante  (1 parametros)
+   R_hz = 1.8157
+   -logL = 37.362   AIC = 76.72   BIC = 76.67
+   deviance = 17.16 con 6 gdl, p = 0.0087
+
+B_cosn_libre  (2 parametros)
+   -logL = INFINITO. El modelo predice exactamente 0 cuentas a 90 grados y se observaron 446.
+   Su verosimilitud es rigurosamente cero: no hay AIC ni BIC que comparar.
+   Esto es consecuencia de anclar cos(90) = 0. El analisis anterior podia ajustarlo
+   solo porque evaluaba (6.123e-17)**n, que para n pequeno vale del orden de 1.
+
+C_cos2_fijo  (1 parametros)
+   -logL = INFINITO. El modelo predice exactamente 0 cuentas a 90 grados y se observaron 446.
+   Su verosimilitud es rigurosamente cero: no hay AIC ni BIC que comparar.
+   Esto es consecuencia de anclar cos(90) = 0. El analisis anterior podia ajustarlo
+   solo porque evaluaba (6.123e-17)**n, que para n pequeno vale del orden de 1.
+
+D_senal_fondo  (3 parametros)
+   S_hz = 0.2523, B_hz = 1.6098, n = 0.6622, fraccion_modulada = 0.1355
+   -logL = 33.357   AIC = 72.71   BIC = 72.55
+   deviance = 9.15 con 4 gdl, p = 0.0575
+
+E_senal_fondo_n2  (2 parametros)
+   S_hz = 0.2346, B_hz = 1.6482, n = 2.0000, fraccion_modulada = 0.1246
+   -logL = 33.848   AIC = 71.70   BIC = 71.59
+   deviance = 10.13 con 5 gdl, p = 0.0716
+
+==============================================================================
+RESULTADOS
+==============================================================================
+
+1. Tasa unica (modelo constante)
+   R = 1.8157 1/s, intervalo del 68 % [1.7879, 1.8438]
+   deviance = 17.16 con 6 gdl, p = 0.0087
+   NO es un buen ajuste bajo Poisson pura. Es el mejor soportado de
+   los cinco, pero decir solo eso seria enganoso: los datos estan mas
+   dispersos de lo que permite la estadistica de conteo sola. La
+   dispersion sobrante se cuantifica en 06_systematics, donde se ve
+   que es del tamano del sistematico entre corridas que mide el
+   propio control de 360 grados.
+
+2. Cuanta modulacion angular admiten los datos (modelo E, n = 2 fijo)
+   S = 0.2346 1/s [0.1470, 0.3210] al 68 %
+   B = 1.6482 1/s
+   fraccion modulada a 0 grados = 0.1246
+   COTA SUPERIOR AL 95 %: S < 0.3762 1/s, es decir una
+   fraccion modulada por debajo del 19.5 %.
+
+3. Comparacion con la hipotesis de tasa constante
+   Delta(-2lnL) = 7.028 con 1 gdl, p = 0.0080
+   Bajo Poisson pura la componente modulada SI mejora el ajuste.
+
+   ESTE P-VALOR NO ES LA CONCLUSION, y tomarlo por tal seria el error
+   principal que este analisis existe para no repetir. Supone que la
+   unica fuente de incertidumbre es la estadistica de conteo, y este
+   conjunto contiene la prueba de que no lo es: el archivo de 360
+   grados repite la medida de 0 grados y difiere un 7.2 %. Basta un
+   sistematico entre corridas del 3.9 % para que esta preferencia deje
+   de ser significativa, es decir bastante menos de lo que el propio
+   control mide. La reevaluacion esta en 06_systematics y es la que
+   manda.
+   Advertencia estadistica adicional: S esta acotado a valores no
+   negativos, luego el parametro esta en el borde del espacio y la
+   distribucion asintotica no es exactamente chi2.
+
+4. Residuos de Pearson frente al modelo constante
+     0 grados: N-1 =  676, esperado =   614.2, residuo =  +2.49 sigma
+     5 grados: N-1 =  589, esperado =   593.9, residuo =  -0.20 sigma
+    15 grados: N-1 =  493, esperado =   529.9, residuo =  -1.60 sigma
+    25 grados: N-1 =  765, esperado =   731.9, residuo =  +1.22 sigma
+    35 grados: N-1 =  543, esperado =   532.4, residuo =  +0.46 sigma
+    45 grados: N-1 =  711, esperado =   717.7, residuo =  -0.25 sigma
+    90 grados: N-1 =  446, esperado =   503.0, residuo =  -2.54 sigma

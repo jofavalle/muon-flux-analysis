@@ -1,0 +1,15 @@
+01_validation_v1
+generado: 2026-08-10T21:15:53+00:00
+commit:   14f282edb0be5c625b5781d63bba4cc9430f596e (ARBOL SUCIO)
+==============================================================================
+[    OK  ] inventario de corridas: 8 corridas
+[    OK  ] el reloj no retrocede: todas las marcas de tiempo son estrictamente crecientes
+[    OK  ] fraccion de tiempo muerto: entre 9.09 % y 9.28 %
+[    OK  ] presion y temperatura en rango: todas las filas dentro de rango fisico
+[    OK  ] ventana de 600 s del analisis anterior: la corrida mas larga dura 444.1 s, asi que el recorte --max-ms de 600 s nunca actuo sobre estos datos
+[    OK  ] filtro de coincidencia: Coincident == 1 en los 4760 eventos, luego el filtro es un no-op. Al no haber singles registrados, LA TASA DE ACCIDENTALES NO ES ESTIMABLE desde este conjunto: no se puede restar ni acotar.
+[CONOCIDA] lineas malformadas: 1 linea(s) rechazada(s): {15: ['118  | Hexa address:  0x76']} (documentado: data/raw/015deg esta truncado por arriba)
+[CONOCIDA] lecturas de arranque del sensor: 8 fila(s) con 73157.02 Pa / 23.13 C antes de estabilizarse el BMP280, repartidas asi: {0: 2, 5: 2, 25: 2, 35: 1, 360: 1}. No afectan al conteo de eventos ni a los tiempos; se marcan porque invalidan cualquier uso de presion o temperatura en esas filas.
+
+8 comprobaciones, 0 alerta(s), 2 anomalia(s) ya documentada(s) en docs/dataset.md.
+Las anomalias documentadas no hacen fallar la puerta: lo que tiene que detectar es un cambio en los datos. Con --strict cuentan.

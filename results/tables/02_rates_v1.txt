@@ -1,0 +1,20 @@
+02_rates_v1
+generado: 2026-08-10T21:15:54+00:00
+commit:   14f282edb0be5c625b5781d63bba4cc9430f596e (ARBOL SUCIO)
+==============================================================================
+ ang     N   N-1   ventana      vivo  muerta%   R_pared    R_viva    sigma  subida%
+----------------------------------------------------------------------------------------
+   0   677   676    372.86    338.27     9.28    1.8130    1.9984   0.0769    10.23
+   5   590   589    360.03    327.07     9.16    1.6360    1.8009   0.0742    10.08
+  15   494   493    321.20    291.84     9.14    1.5349    1.6893   0.0761    10.06
+  25   766   765    444.11    403.10     9.23    1.7226    1.8978   0.0686    10.17
+  35   544   543    323.01    293.24     9.22    1.6810    1.8517   0.0795    10.15
+  45   712   711    435.41    395.27     9.22    1.6329    1.7988   0.0675    10.15
+  90   447   446    304.74    277.05     9.09    1.4635    1.6098   0.0762    10.00
+ 360   530   529    314.96    286.03     9.19    1.6796    1.8495   0.0804    10.12
+----------------------------------------------------------------------------------------
+Fraccion muerta entre 9.09 % y 9.28 %, con dispersion de 0.055 puntos porcentuales.
+Es practicamente identica en las ocho corridas, luego la correccion de
+tiempo vivo se cancela casi entera en los cocientes entre angulos: sube
+todas las tasas un 10 % y deja la forma angular donde estaba. Importa
+para la tasa absoluta, no para la dependencia con el angulo.

@@ -1,0 +1,232 @@
+{
+  "procedencia": {
+    "generado_utc": "2026-08-10T21:15:51+00:00",
+    "git": {
+      "commit": "14f282edb0be5c625b5781d63bba4cc9430f596e",
+      "rama": "main",
+      "arbol_limpio": false
+    },
+    "semilla": 20260810,
+    "python": "3.11.2",
+    "numpy": "2.4.6",
+    "plataforma": "Linux-6.1.0-52-amd64-x86_64-with-glibc2.36",
+    "parametros": {
+      "data_dir": "data/raw"
+    }
+  },
+  "n_corridas": 8,
+  "n_eventos_total": 4760,
+  "n_lineas_rechazadas_total": 1,
+  "n_filas_arranque_total": 8,
+  "cabecera_declarada": "Event TimeStamp[ms] ADC1 ADC2 SiPM[mV] Temp[C] Pressure[Pa] DeadTime[us] Coincident Name",
+  "cabecera_real": "Event TimeStamp[ms] ADC1 ADC2 SiPM[mV] Pressure[Pa] Temp[C] DeadTime[us] Coincident Name",
+  "inventario": [
+    {
+      "angulo_deg": 0,
+      "archivo": "000deg",
+      "n_eventos": 677,
+      "n_coincidentes": 677,
+      "ventana_s": 372.861,
+      "tiempo_muerto_s": 34.588897,
+      "tiempo_vivo_s": 338.272103,
+      "fraccion_muerta": 0.09276619705466649,
+      "presion_mediana_pa": 93593.18651851852,
+      "temperatura_mediana_c": 28.44814814814815,
+      "calidad": {
+        "ruta": "data/raw/000deg",
+        "lineas_totales": 688,
+        "lineas_datos": 677,
+        "lineas_rechazadas": 0,
+        "textos_rechazados": [],
+        "cabecera_presente": true,
+        "columnas_invertidas": true,
+        "filas_arranque_sensor": 2,
+        "indices_arranque_sensor": [
+          0,
+          1
+        ],
+        "filas_fuera_de_rango": 0
+      }
+    },
+    {
+      "angulo_deg": 5,
+      "archivo": "005deg",
+      "n_eventos": 590,
+      "n_coincidentes": 590,
+      "ventana_s": 360.032,
+      "tiempo_muerto_s": 32.965149,
+      "tiempo_vivo_s": 327.066851,
+      "fraccion_muerta": 0.09156171951382099,
+      "presion_mediana_pa": 93567.8299319728,
+      "temperatura_mediana_c": 29.206632653061224,
+      "calidad": {
+        "ruta": "data/raw/005deg",
+        "lineas_totales": 601,
+        "lineas_datos": 590,
+        "lineas_rechazadas": 0,
+        "textos_rechazados": [],
+        "cabecera_presente": true,
+        "columnas_invertidas": true,
+        "filas_arranque_sensor": 2,
+        "indices_arranque_sensor": [
+          0,
+          1
+        ],
+        "filas_fuera_de_rango": 0
+      }
+    },
+    {
+      "angulo_deg": 15,
+      "archivo": "015deg",
+      "n_eventos": 494,
+      "n_coincidentes": 494,
+      "ventana_s": 321.203,
+      "tiempo_muerto_s": 29.367358,
+      "tiempo_vivo_s": 291.83564199999995,
+      "fraccion_muerta": 0.09142927681248307,
+      "presion_mediana_pa": 93555.13461538461,
+      "temperatura_mediana_c": 29.18886639676114,
+      "calidad": {
+        "ruta": "data/raw/015deg",
+        "lineas_totales": 502,
+        "lineas_datos": 494,
+        "lineas_rechazadas": 1,
+        "textos_rechazados": [
+          "118  | Hexa address:  0x76"
+        ],
+        "cabecera_presente": true,
+        "columnas_invertidas": true,
+        "filas_arranque_sensor": 0,
+        "indices_arranque_sensor": [],
+        "filas_fuera_de_rango": 0
+      }
+    },
+    {
+      "angulo_deg": 25,
+      "archivo": "025deg",
+      "n_eventos": 766,
+      "n_coincidentes": 766,
+      "ventana_s": 444.105,
+      "tiempo_muerto_s": 41.003462,
+      "tiempo_vivo_s": 403.101538,
+      "fraccion_muerta": 0.09232830524312943,
+      "presion_mediana_pa": 93554.46361256544,
+      "temperatura_mediana_c": 28.658246073298432,
+      "calidad": {
+        "ruta": "data/raw/025deg",
+        "lineas_totales": 777,
+        "lineas_datos": 766,
+        "lineas_rechazadas": 0,
+        "textos_rechazados": [],
+        "cabecera_presente": true,
+        "columnas_invertidas": true,
+        "filas_arranque_sensor": 2,
+        "indices_arranque_sensor": [
+          0,
+          1
+        ],
+        "filas_fuera_de_rango": 0
+      }
+    },
+    {
+      "angulo_deg": 35,
+      "archivo": "035deg",
+      "n_eventos": 544,
+      "n_coincidentes": 544,
+      "ventana_s": 323.015,
+      "tiempo_muerto_s": 29.771276,
+      "tiempo_vivo_s": 293.243724,
+      "fraccion_muerta": 0.09216685293252636,
+      "presion_mediana_pa": 93555.5276243094,
+      "temperatura_mediana_c": 27.294475138121545,
+      "calidad": {
+        "ruta": "data/raw/035deg",
+        "lineas_totales": 555,
+        "lineas_datos": 544,
+        "lineas_rechazadas": 0,
+        "textos_rechazados": [],
+        "cabecera_presente": true,
+        "columnas_invertidas": true,
+        "filas_arranque_sensor": 1,
+        "indices_arranque_sensor": [
+          0
+        ],
+        "filas_fuera_de_rango": 0
+      }
+    },
+    {
+      "angulo_deg": 45,
+      "archivo": "045deg",
+      "n_eventos": 712,
+      "n_coincidentes": 712,
+      "ventana_s": 435.41,
+      "tiempo_muerto_s": 40.135565,
+      "tiempo_vivo_s": 395.27443500000004,
+      "fraccion_muerta": 0.09217878551250545,
+      "presion_mediana_pa": 93574.28384831462,
+      "temperatura_mediana_c": 28.558988764044944,
+      "calidad": {
+        "ruta": "data/raw/045deg",
+        "lineas_totales": 723,
+        "lineas_datos": 712,
+        "lineas_rechazadas": 0,
+        "textos_rechazados": [],
+        "cabecera_presente": true,
+        "columnas_invertidas": true,
+        "filas_arranque_sensor": 0,
+        "indices_arranque_sensor": [],
+        "filas_fuera_de_rango": 0
+      }
+    },
+    {
+      "angulo_deg": 90,
+      "archivo": "090deg",
+      "n_eventos": 447,
+      "n_coincidentes": 447,
+      "ventana_s": 304.741,
+      "tiempo_muerto_s": 27.69593,
+      "tiempo_vivo_s": 277.04507,
+      "fraccion_muerta": 0.09088350435287672,
+      "presion_mediana_pa": 93569.82684563758,
+      "temperatura_mediana_c": 28.69642058165548,
+      "calidad": {
+        "ruta": "data/raw/090deg",
+        "lineas_totales": 458,
+        "lineas_datos": 447,
+        "lineas_rechazadas": 0,
+        "textos_rechazados": [],
+        "cabecera_presente": true,
+        "columnas_invertidas": true,
+        "filas_arranque_sensor": 0,
+        "indices_arranque_sensor": [],
+        "filas_fuera_de_rango": 0
+      }
+    },
+    {
+      "angulo_deg": 360,
+      "archivo": "360deg",
+      "n_eventos": 530,
+      "n_coincidentes": 530,
+      "ventana_s": 314.965,
+      "tiempo_muerto_s": 28.939067,
+      "tiempo_vivo_s": 286.02593299999995,
+      "fraccion_muerta": 0.09188026288635247,
+      "presion_mediana_pa": 93567.42608695652,
+      "temperatura_mediana_c": 28.81663516068053,
+      "calidad": {
+        "ruta": "data/raw/360deg",
+        "lineas_totales": 541,
+        "lineas_datos": 530,
+        "lineas_rechazadas": 0,
+        "textos_rechazados": [],
+        "cabecera_presente": true,
+        "columnas_invertidas": true,
+        "filas_arranque_sensor": 1,
+        "indices_arranque_sensor": [
+          0
+        ],
+        "filas_fuera_de_rango": 0
+      }
+    }
+  ]
+}
