@@ -1,7 +1,7 @@
-"""Hace importable `lib_muon` desde los tests sin instalar el paquete."""
+"""Makes `lib_muon` importable from the tests without installing the package."""
 
 import sys
 from pathlib import Path
 
-RAIZ = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(RAIZ / "scripts"))
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "scripts"))

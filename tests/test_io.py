@@ -1,7 +1,7 @@
-"""Tests de lectura de los archivos crudos.
+"""Tests of raw file reading.
 
-Corren sobre los datos reales del repositorio: son 256 kB y estan versionados
-precisamente para que esto sea posible.
+They run on the repository's real data: it is 256 kB and it is versioned
+precisely so that this is possible.
 """
 
 from pathlib import Path
@@ -11,158 +11,153 @@ import pytest
 
 from lib_muon import io
 
-RAIZ = Path(__file__).resolve().parents[1]
-CRUDOS = RAIZ / "data" / "raw"
-ANGULOS = [0, 5, 15, 25, 35, 45, 90, 360]
+ROOT = Path(__file__).resolve().parents[1]
+RAW = ROOT / "data" / "raw"
+ANGLES = [0, 5, 15, 25, 35, 45, 90, 360]
 
 
-class TestParseoDeLinea:
-    def test_linea_valida(self):
-        linea = "1\t83\t201\t3741\t2.6\t73157.02\t23.13\t1411\t1\tCOSMIC"
-        campos = io.parse_line(linea)
-        assert campos[0] == 1
-        assert campos[1] == 83
-        assert campos[5] == pytest.approx(73157.02)
-        assert campos[6] == pytest.approx(23.13)
-        assert campos[8] == 1
-        assert campos[9] == "COSMIC"
+class TestLineParsing:
+    def test_valid_line(self):
+        line = "1\t83\t201\t3741\t2.6\t73157.02\t23.13\t1411\t1\tCOSMIC"
+        fields = io.parse_line(line)
+        assert fields[0] == 1
+        assert fields[1] == 83
+        assert fields[5] == pytest.approx(73157.02)
+        assert fields[6] == pytest.approx(23.13)
+        assert fields[8] == 1
+        assert fields[9] == "COSMIC"
 
-    def test_separacion_por_espacios_tambien_vale(self):
-        linea = "1 83 201 3741 2.6 93609.2 27.8 1411 1 COSMIC"
-        assert io.parse_line(linea)[0] == 1
+    def test_space_separation_also_works(self):
+        line = "1 83 201 3741 2.6 93609.2 27.8 1411 1 COSMIC"
+        assert io.parse_line(line)[0] == 1
 
     @pytest.mark.parametrize(
-        "mala",
+        "bad",
         [
-            " 118  | Hexa address:  0x76",   # la de data/raw/015deg, literal
+            " 118  | Hexa address:  0x76",   # the one in data/raw/015deg, verbatim
             "1\t83\t201",
             "",
-            "no son numeros en absoluto aqui dentro nada de nada cero",
+            "these are not numbers at all not one of them anywhere here zero",
         ],
     )
-    def test_lineas_malformadas_lanzan(self, mala):
+    def test_malformed_lines_raise(self, bad):
         with pytest.raises(ValueError):
-            io.parse_line(mala)
+            io.parse_line(bad)
 
-    def test_columnas_de_mas_tambien_lanzan(self):
-        """El script original aceptaba >= 10 columnas y se quedaba con las 10
-        primeras, de modo que una linea con basura pegada al final entraba
-        como buena."""
+    def test_extra_columns_also_raise(self):
+        """The original script accepted >= 10 columns and kept the first ten,
+        so a line with junk appended came through as good."""
         with pytest.raises(ValueError):
             io.parse_line("1 83 201 3741 2.6 93609.2 27.8 1411 1 COSMIC extra")
 
 
-class TestLecturaDeArchivosReales:
-    def test_los_ocho_archivos_se_leen(self):
-        corridas = io.load_all(CRUDOS)
-        assert sorted(corridas) == ANGULOS
+class TestReadingRealFiles:
+    def test_all_eight_files_are_read(self):
+        assert sorted(io.load_all(RAW)) == ANGLES
 
-    def test_recuento_total_de_eventos(self):
-        corridas = io.load_all(CRUDOS)
-        assert sum(len(c) for c in corridas.values()) == 4760
+    def test_total_event_count(self):
+        runs = io.load_all(RAW)
+        assert sum(len(r) for r in runs.values()) == 4760
 
-    def test_015deg_tiene_exactamente_una_linea_rechazada(self):
-        """El archivo esta truncado por arriba: perdio las tres primeras
-        lineas del preambulo y la cuarta quedo partida, de modo que su primera
-        linea es el fragmento ' 118  | Hexa address:  0x76'. El script original
-        la descartaba en silencio con `except Exception: continue`.
+    def test_015deg_has_exactly_one_rejected_line(self):
+        """The file is truncated at the top: it lost the first lines of the
+        preamble and the fourth was cut, so its first line is the fragment
+        ' 118  | Hexa address:  0x76'. The original script dropped it silently
+        with `except Exception: continue`.
 
-        La linea de nombres de columna si sobrevivio al truncado, asi que el
-        archivo se lee sin ambiguedad; lo perdido es el preambulo del sensor.
+        The column-name line did survive the truncation, so the file reads
+        unambiguously; what was lost is the sensor preamble.
         """
-        corrida = io.load_run(CRUDOS / "015deg")
-        assert corrida.calidad.lineas_rechazadas == 1
-        assert corrida.calidad.textos_rechazados == ["118  | Hexa address:  0x76"]
-        assert corrida.calidad.cabecera_presente
+        run = io.load_run(RAW / "015deg")
+        assert run.quality.rejected_lines == 1
+        assert run.quality.rejected_texts == ["118  | Hexa address:  0x76"]
+        assert run.quality.header_present
 
-    def test_ningun_otro_archivo_tiene_lineas_rechazadas(self):
-        for angulo in ANGULOS:
-            if angulo == 15:
+    def test_no_other_file_has_rejected_lines(self):
+        for angle in ANGLES:
+            if angle == 15:
                 continue
-            corrida = io.load_run(CRUDOS / f"{angulo:03d}deg")
-            assert corrida.calidad.lineas_rechazadas == 0, (
-                f"{angulo} grados tiene lineas rechazadas inesperadas"
+            run = io.load_run(RAW / f"{angle:03d}deg")
+            assert run.quality.rejected_lines == 0, (
+                f"{angle} degrees has unexpected rejected lines"
             )
 
-    def test_la_cabecera_de_columnas_esta_en_los_ocho(self):
-        for angulo in ANGULOS:
-            corrida = io.load_run(CRUDOS / f"{angulo:03d}deg")
-            assert corrida.calidad.cabecera_presente
+    def test_the_column_header_is_in_all_eight(self):
+        for angle in ANGLES:
+            assert io.load_run(RAW / f"{angle:03d}deg").quality.header_present
 
 
-class TestOrdenDeColumnas:
-    def test_las_columnas_estan_invertidas_en_los_ocho_archivos(self):
-        """La cabecera declara Temp[C] Pressure[Pa] y vienen al reves."""
-        for angulo in ANGULOS:
-            corrida = io.load_run(CRUDOS / f"{angulo:03d}deg")
-            assert corrida.calidad.columnas_invertidas, (
-                f"{angulo} grados: se esperaba presion antes que temperatura"
+class TestColumnOrder:
+    def test_columns_are_swapped_in_all_eight_files(self):
+        """The header declares Temp[C] Pressure[Pa] and they arrive reversed."""
+        for angle in ANGLES:
+            run = io.load_run(RAW / f"{angle:03d}deg")
+            assert run.quality.columns_swapped, (
+                f"{angle} degrees: expected pressure before temperature"
             )
 
-    def test_presion_y_temperatura_quedan_en_rango_fisico(self):
-        for angulo in ANGULOS:
-            corrida = io.load_run(CRUDOS / f"{angulo:03d}deg")
-            assert io.RANGO_PRESION_PA[0] < np.median(corrida.presion_pa) < io.RANGO_PRESION_PA[1]
-            assert io.RANGO_TEMPERATURA_C[0] < np.median(corrida.temperatura_c) < io.RANGO_TEMPERATURA_C[1]
-            assert corrida.calidad.filas_fuera_de_rango == 0
+    def test_pressure_and_temperature_land_in_physical_range(self):
+        for angle in ANGLES:
+            run = io.load_run(RAW / f"{angle:03d}deg")
+            assert io.PRESSURE_RANGE_PA[0] < np.median(run.pressure_pa) < io.PRESSURE_RANGE_PA[1]
+            assert io.TEMPERATURE_RANGE_C[0] < np.median(run.temperature_c) < io.TEMPERATURE_RANGE_C[1]
+            assert run.quality.out_of_range_rows == 0
 
-    def test_se_niega_a_adivinar_si_ninguna_columna_encaja(self):
-        with pytest.raises(ValueError, match="no se puede decidir"):
-            io._decidir_orden_columnas(np.array([5.0, 5.0]), np.array([7.0, 7.0]))
+    def test_it_refuses_to_guess_when_neither_column_fits(self):
+        with pytest.raises(ValueError, match="cannot decide"):
+            io._decide_column_order(np.array([5.0, 5.0]), np.array([7.0, 7.0]))
 
 
-class TestArranqueDelSensor:
-    def test_recuento_por_archivo(self):
-        """El BMP280 emite 73157.02 Pa / 23.13 C antes de estabilizarse."""
-        esperado = {0: 2, 5: 2, 15: 0, 25: 2, 35: 1, 45: 0, 90: 0, 360: 1}
-        for angulo, cuantas in esperado.items():
-            corrida = io.load_run(CRUDOS / f"{angulo:03d}deg")
-            assert corrida.calidad.filas_arranque_sensor == cuantas, (
-                f"{angulo} grados: se esperaban {cuantas} filas de arranque"
+class TestSensorStartup:
+    def test_count_per_file(self):
+        """The BMP280 emits 73157.02 Pa / 23.13 C before settling."""
+        expected = {0: 2, 5: 2, 15: 0, 25: 2, 35: 1, 45: 0, 90: 0, 360: 1}
+        for angle, how_many in expected.items():
+            run = io.load_run(RAW / f"{angle:03d}deg")
+            assert run.quality.sensor_startup_rows == how_many, (
+                f"{angle} degrees: expected {how_many} startup rows"
             )
 
-    def test_siempre_al_principio_de_la_corrida(self):
-        for angulo in ANGULOS:
-            corrida = io.load_run(CRUDOS / f"{angulo:03d}deg")
-            indices = corrida.calidad.indices_arranque_sensor
+    def test_always_at_the_start_of_the_run(self):
+        for angle in ANGLES:
+            run = io.load_run(RAW / f"{angle:03d}deg")
+            indices = run.quality.sensor_startup_indices
             if indices:
                 assert max(indices) < 10, (
-                    f"{angulo} grados: arranque del sensor fuera del principio"
+                    f"{angle} degrees: sensor startup outside the beginning"
                 )
 
 
-class TestTiempos:
-    def test_el_reloj_nunca_retrocede(self):
-        """Justifica usar la resta directa tN - t1 en vez de acumular
-        diferencias positivas, que es lo que hacia el script original."""
-        for angulo in ANGULOS:
-            corrida = io.load_run(CRUDOS / f"{angulo:03d}deg")
-            assert np.all(np.diff(corrida.timestamp_ms) > 0), (
-                f"{angulo} grados: el reloj retrocede o se repite"
+class TestTimes:
+    def test_the_clock_never_runs_backwards(self):
+        """Justifies using the plain difference tN - t1 rather than
+        accumulating positive steps, which is what the original script did."""
+        for angle in ANGLES:
+            run = io.load_run(RAW / f"{angle:03d}deg")
+            assert np.all(np.diff(run.timestamp_ms) > 0), (
+                f"{angle} degrees: the clock goes back or repeats"
             )
 
-    def test_fraccion_muerta_en_el_rango_esperado(self):
-        for angulo in ANGULOS:
-            corrida = io.load_run(CRUDOS / f"{angulo:03d}deg")
-            assert 0.085 < corrida.fraccion_muerta < 0.10, (
-                f"{angulo} grados: fraccion muerta {corrida.fraccion_muerta:.4f} "
-                "fuera del 9 % caracteristico del conjunto"
+    def test_dead_fraction_in_the_expected_band(self):
+        for angle in ANGLES:
+            run = io.load_run(RAW / f"{angle:03d}deg")
+            assert 0.085 < run.dead_fraction < 0.10, (
+                f"{angle} degrees: dead fraction {run.dead_fraction:.4f} outside "
+                "the 9 % characteristic of this set"
             )
 
-    def test_todas_las_corridas_caben_en_la_ventana_de_600_s(self):
-        """El --max-ms de 600 s del script original no recortaba nada: la
-        corrida mas larga dura 444 s."""
-        for angulo in ANGULOS:
-            corrida = io.load_run(CRUDOS / f"{angulo:03d}deg")
-            assert corrida.ventana_s < 600.0
+    def test_every_run_fits_within_the_600_s_window(self):
+        """The --max-ms of 600 s in the original script cut nothing: the
+        longest run lasts 444 s."""
+        for angle in ANGLES:
+            assert io.load_run(RAW / f"{angle:03d}deg").window_s < 600.0
 
 
-class TestCoincidencia:
-    def test_el_filtro_de_coincidencia_es_un_no_op(self):
-        """Coincident == 1 en los 4760 eventos. Sin singles registrados, la
-        tasa de accidentales no es estimable desde estos datos."""
-        corridas = io.load_all(CRUDOS)
-        for angulo, corrida in corridas.items():
-            assert np.all(corrida.coincidente == 1), (
-                f"{angulo} grados tiene eventos no coincidentes"
+class TestCoincidence:
+    def test_the_coincidence_filter_is_a_no_op(self):
+        """Coincident == 1 for all 4760 events. With no singles recorded, the
+        accidental rate is not estimable from this data."""
+        for angle, run in io.load_all(RAW).items():
+            assert np.all(run.coincident == 1), (
+                f"{angle} degrees has non-coincident events"
             )

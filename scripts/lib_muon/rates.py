@@ -1,17 +1,17 @@
-"""Tasas de conteo corregidas por tiempo vivo.
+"""Count rates corrected for live time.
 
-Tres correcciones sobre el script original, todas ellas cambian el numero
-publicado:
+Three corrections over the original script, all of which change the published
+number:
 
-1. **Tiempo vivo.** La columna `DeadTime[us]` se parseaba y no se usaba nunca.
-   La fraccion muerta es del 9.09 % al 9.28 % en los ocho archivos, asi que la
-   tasa publicada era un 10 % baja de forma sistematica.
-2. **Estimador insesgado.** Para N eventos observados en la ventana [t1, tN]
-   hay N-1 intervalos entre eventos, no N. El estimador insesgado de la tasa es
-   (N-1)/T, no N/T. El sesgo es 1/N, del 0.15 % al 0.22 % aqui: pequeno frente
-   a la estadistica, pero gratis de corregir.
-3. **Sin dependencia del binning.** La ventana es [t1, tN] completa, no
-   truncada a un multiplo del tamano de bin.
+1. **Live time.** The `DeadTime[us]` column was parsed and never used. The dead
+   fraction is 9.09 % to 9.28 % across the eight files, so the published rate
+   was systematically about 10 % low.
+2. **Unbiased estimator.** For N events observed in the window [t1, tN] there
+   are N-1 inter-event intervals, not N. The unbiased rate estimator is
+   (N-1)/T, not N/T. The bias is 1/N, here 0.15 % to 0.22 %: small next to the
+   statistics, but free to fix.
+3. **No binning dependence.** The window is the full [t1, tN], not truncated to
+   a multiple of the bin size.
 """
 
 from __future__ import annotations
@@ -20,102 +20,103 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from .io import Corrida
+from .io import Run
 
 
 @dataclass
-class Tasa:
-    """Tasa de una corrida, con lo necesario para rehacer el calculo."""
+class Rate:
+    """Rate of one run, with everything needed to redo the computation."""
 
-    angulo_deg: int
-    n_eventos: int
-    n_intervalos: int
-    ventana_s: float
-    tiempo_muerto_s: float
-    tiempo_vivo_s: float
-    fraccion_muerta: float
-    tasa_pared: float
-    tasa_viva: float
-    error_tasa_viva: float
+    angle_deg: int
+    n_events: int
+    n_intervals: int
+    window_s: float
+    dead_time_s: float
+    live_time_s: float
+    dead_fraction: float
+    wall_rate: float
+    live_rate: float
+    live_rate_error: float
 
-    def como_dict(self) -> dict:
+    def as_dict(self) -> dict:
         return {
-            "angulo_deg": self.angulo_deg,
-            "n_eventos": self.n_eventos,
-            "n_intervalos": self.n_intervalos,
-            "ventana_s": self.ventana_s,
-            "tiempo_muerto_s": self.tiempo_muerto_s,
-            "tiempo_vivo_s": self.tiempo_vivo_s,
-            "fraccion_muerta": self.fraccion_muerta,
-            "tasa_pared_hz": self.tasa_pared,
-            "tasa_viva_hz": self.tasa_viva,
-            "error_tasa_viva_hz": self.error_tasa_viva,
+            "angle_deg": self.angle_deg,
+            "n_events": self.n_events,
+            "n_intervals": self.n_intervals,
+            "window_s": self.window_s,
+            "dead_time_s": self.dead_time_s,
+            "live_time_s": self.live_time_s,
+            "dead_fraction": self.dead_fraction,
+            "wall_rate_hz": self.wall_rate,
+            "live_rate_hz": self.live_rate,
+            "live_rate_error_hz": self.live_rate_error,
         }
 
 
-def calcular_tasa(corrida: Corrida, solo_coincidentes: bool = True) -> Tasa:
-    """Tasa de una corrida corregida por tiempo vivo.
+def compute_rate(run: Run, coincident_only: bool = True) -> Rate:
+    """Rate of one run, corrected for live time.
 
-    `solo_coincidentes` se conserva por fidelidad al analisis original, pero es
-    un no-op sobre estos datos: `Coincident == 1` en los 4760 eventos de los
-    ocho archivos. Al no haber singles registrados, la tasa de accidentales no
-    es estimable desde este conjunto; ver docs/dataset.md.
+    `coincident_only` is kept for fidelity to the original analysis, but it is
+    a no-op on this data: `Coincident == 1` for all 4760 events across the
+    eight files. With no singles recorded, the accidental rate is not
+    estimable from this set; see docs/dataset.md.
     """
-    tiempos = corrida.tiempo_relativo_s
-    if solo_coincidentes:
-        tiempos = tiempos[corrida.coincidente == 1]
-    if len(tiempos) < 2:
+    times = run.elapsed_s
+    if coincident_only:
+        times = times[run.coincident == 1]
+    if len(times) < 2:
         raise ValueError(
-            f"la corrida de {corrida.angulo_deg} grados tiene {len(tiempos)} "
-            "eventos: hacen falta al menos 2 para definir una tasa"
+            f"the {run.angle_deg} degree run has {len(times)} events: "
+            "at least 2 are needed to define a rate"
         )
 
-    n = len(tiempos)
-    ventana = float(tiempos[-1] - tiempos[0])
-    muerto = corrida.tiempo_muerto_s
-    vivo = ventana - muerto
-    if vivo <= 0:
+    n = len(times)
+    window = float(times[-1] - times[0])
+    dead = run.dead_time_s
+    live = window - dead
+    if live <= 0:
         raise ValueError(
-            f"tiempo vivo no positivo en {corrida.angulo_deg} grados: "
-            f"ventana {ventana:.2f} s, tiempo muerto {muerto:.2f} s"
+            f"non-positive live time at {run.angle_deg} degrees: "
+            f"window {window:.2f} s, dead time {dead:.2f} s"
         )
 
-    n_intervalos = n - 1
-    tasa_viva = n_intervalos / vivo
-    # n_intervalos es Poisson de media R*T_vivo con T_vivo fijo, luego el error
-    # relativo de la tasa es 1/sqrt(n_intervalos).
-    error = tasa_viva / np.sqrt(n_intervalos)
+    n_intervals = n - 1
+    live_rate = n_intervals / live
+    # n_intervals is Poisson with mean R*T_live at fixed T_live, so the
+    # relative error on the rate is 1/sqrt(n_intervals).
+    error = live_rate / np.sqrt(n_intervals)
 
-    return Tasa(
-        angulo_deg=corrida.angulo_deg,
-        n_eventos=n,
-        n_intervalos=n_intervalos,
-        ventana_s=ventana,
-        tiempo_muerto_s=muerto,
-        tiempo_vivo_s=vivo,
-        fraccion_muerta=muerto / ventana,
-        tasa_pared=n_intervalos / ventana,
-        tasa_viva=tasa_viva,
-        error_tasa_viva=error,
+    return Rate(
+        angle_deg=run.angle_deg,
+        n_events=n,
+        n_intervals=n_intervals,
+        window_s=window,
+        dead_time_s=dead,
+        live_time_s=live,
+        dead_fraction=dead / window,
+        wall_rate=n_intervals / window,
+        live_rate=live_rate,
+        live_rate_error=error,
     )
 
 
-def normalizar(tasas: dict[int, Tasa], angulo_ref: int = 0) -> dict[int, tuple[float, float]]:
-    """Tasas relativas a la del angulo de referencia, con su error propagado.
+def normalise(rates: dict[int, Rate], reference_angle: int = 0) -> dict[int, tuple[float, float]]:
+    """Rates relative to the reference angle, with propagated errors.
 
-    Advertencia que el script original no hacia: los cocientes comparten el
-    denominador, luego NO son independientes y un chi2 diagonal sobre ellos
-    esta mal planteado. Estos valores sirven para dibujar y para comparar con
-    el analisis anterior; la inferencia se hace en `models` sobre las cuentas
-    crudas, donde el problema no existe.
+    A warning the original script did not make: these ratios share a
+    denominator, so they are NOT independent and a diagonal chi-square over
+    them is ill-posed. They are useful for plotting and for comparing against
+    the earlier analysis; inference is done in `models` on the raw counts,
+    where the problem does not arise.
     """
-    if angulo_ref not in tasas:
-        raise ValueError(f"falta el angulo de referencia {angulo_ref} en las tasas")
-    ref = tasas[angulo_ref]
-    r0, e0 = ref.tasa_viva, ref.error_tasa_viva
-    salida = {}
-    for angulo, t in tasas.items():
-        cociente = t.tasa_viva / r0
-        error = np.sqrt((t.error_tasa_viva / r0) ** 2 + (t.tasa_viva * e0 / r0**2) ** 2)
-        salida[angulo] = (float(cociente), float(error))
-    return salida
+    if reference_angle not in rates:
+        raise ValueError(f"reference angle {reference_angle} missing from the rates")
+    reference = rates[reference_angle]
+    r0, e0 = reference.live_rate, reference.live_rate_error
+    out = {}
+    for angle, rate in rates.items():
+        ratio = rate.live_rate / r0
+        error = np.sqrt((rate.live_rate_error / r0) ** 2
+                        + (rate.live_rate * e0 / r0**2) ** 2)
+        out[angle] = (float(ratio), float(error))
+    return out

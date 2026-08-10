@@ -2,41 +2,47 @@
 """
 06_systematics.py
 
-Incertidumbres sistematicas y reevaluacion de la significancia del resultado.
+Systematic uncertainties and reassessment of the significance of the result.
 
-Este es el paso que decide la conclusion del analisis. 05_fits hace la
-inferencia bajo la hipotesis de que la unica fuente de incertidumbre es la
-estadistica de conteo, y bajo esa hipotesis la componente modulada resulta
-significativa. Este script comprueba que esa hipotesis es falsa en este
-conjunto, y con cuanto margen.
+This is the step that settles the conclusion of the analysis. 05_fits performs
+the inference under the assumption that counting statistics is the only source
+of uncertainty, and under that assumption the modulated component comes out
+significant. This script shows that the assumption is false for this data set,
+and by how wide a margin.
 
-Fuentes evaluadas:
-  1. REPETIBILIDAD ENTRE CORRIDAS. El archivo de 360 grados es una segunda
-     medida del mismo angulo que el de 0 grados. La discrepancia entre ambas es
-     una medida directa de cuanto se mueve el aparato entre corridas por causas
-     que no son estadisticas. Es la sistematica dominante y la unica que este
-     conjunto permite medir en vez de estimar.
-  2. TIEMPO VIVO. Se separa su efecto sobre la tasa absoluta del efecto sobre
-     los cocientes entre angulos, que es de segundo orden porque la fraccion
-     muerta es casi identica en las ocho corridas.
-  3. VENTANA TEMPORAL. Cuanto se mueven los cocientes al analizar solo la
-     primera mitad de cada corrida.
-  4. ANGULO DE REFERENCIA. Cuanto depende el resultado de haber normalizado a
-     0 grados y no a otro angulo.
-  5. TAMANO DE BIN. En el analisis anterior movia la tasa publicada un 0.4 %;
-     aqui se comprueba que ya no interviene en ningun numero fisico.
+Sources evaluated:
+  1. RUN-TO-RUN REPEATABILITY. The 360 degree file is a second measurement of
+     the same angle as the 0 degree one. The discrepancy between them measures
+     directly how much the apparatus moves between runs for reasons that are
+     not statistical. It is the dominant systematic and the only one this data
+     set allows to be measured rather than assumed.
+  2. LIVE TIME. Its effect on the absolute rate is separated from its effect on
+     the ratios between angles, which is second order because the dead fraction
+     is nearly identical across the eight runs.
+  3. TIME WINDOW. How much the ratios move when only the first half of each run
+     is analysed. Reported as the EXCESS over the Poisson expectation, since
+     half a run holds half the events and fluctuates accordingly.
+  4. REFERENCE ANGLE. How much the result depends on having normalised to 0
+     degrees rather than another angle.
+  5. BIN SIZE. In the previous analysis this moved the published rate by 0.4 %;
+     here it is verified to enter no physical number at all.
 
-Con la sistematica dominante medida, se rehace la comparacion de modelos y se
-recalcula la cota superior sobre la fraccion modulada.
+Every candidate source is compared against its own Poisson expectation before
+entering the table. Without that comparison a purely statistical fluctuation
+enters the systematic budget dressed as a systematic, which for the time window
+would have contributed a spurious 5.45 %.
 
-Salidas exactas:
-  - results/tables/06_systematics_vN.json y .txt
-  - results/figures/06_systematics_vN.pdf y .png
+With the dominant systematic measured, the model comparison is redone and the
+upper bound on the modulated fraction is recomputed.
 
-Codigo de salida: 0 si la evaluacion se completa; 1 si falta el control de
-repetibilidad, sin el cual la sistematica dominante no es medible.
+Exact outputs:
+  - results/tables/06_systematics_vN.json and .txt
+  - results/figures/06_systematics_vN.pdf and .png
 
-Uso tipico, desde la raiz del repositorio y con .venv activo:
+Exit code: 0 if the assessment completes; 1 if the repeatability control is
+missing, without which the dominant systematic is not measurable.
+
+Typical use, from the repository root with .venv active:
   python scripts/06_systematics.py
 """
 
@@ -52,416 +58,406 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from lib_muon import io, models, plotting, provenance, rates  # noqa: E402
 from lib_muon.plotting import plt  # noqa: E402
 
-ANGULO_REFERENCIA = 0
-ANGULO_CONTROL = 360
+REFERENCE_ANGLE = 0
+CONTROL_ANGLE = 360
 
 
-def ajuste_ponderado(tasas, sigmas, forma):
-    """Minimos cuadrados ponderados de R = S*forma + B. Devuelve (S, B, chi2)."""
-    matriz = np.vstack([forma, np.ones_like(forma)]).T
-    pesos = np.diag(1.0 / sigmas**2)
-    coeficientes = np.linalg.solve(
-        matriz.T @ pesos @ matriz, matriz.T @ pesos @ tasas
-    )
-    residuo = tasas - matriz @ coeficientes
-    return coeficientes[0], coeficientes[1], float(np.sum((residuo / sigmas) ** 2))
+def weighted_fit(observed, sigmas, shape):
+    """Weighted least squares of R = S*shape + B. Returns (S, B, chi2)."""
+    matrix = np.vstack([shape, np.ones_like(shape)]).T
+    weights = np.diag(1.0 / sigmas**2)
+    coefficients = np.linalg.solve(matrix.T @ weights @ matrix,
+                                   matrix.T @ weights @ observed)
+    residual = observed - matrix @ coefficients
+    return coefficients[0], coefficients[1], float(np.sum((residual / sigmas) ** 2))
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser(description="Sistematicas y reevaluacion.")
+    ap = argparse.ArgumentParser(description="Systematics and reassessment.")
     ap.add_argument("--data-dir", default="data/raw")
     ap.add_argument("--tables", default="results/tables")
     ap.add_argument("--out-figures", default="results/figures")
     args = ap.parse_args()
 
-    plotting.aplicar_estilo()
-    producto = provenance.leer_producto(args.tables, "02_rates")
-    tasas_json = {int(a): t for a, t in producto["tasas"].items()}
+    plotting.apply_style()
+    product = provenance.read_product(args.tables, "02_rates")
+    rate_rows = {int(a): r for a, r in product["rates"].items()}
 
-    if ANGULO_CONTROL not in tasas_json:
-        print(f"[06] ERROR: falta la corrida de control de {ANGULO_CONTROL} "
-              "grados; la sistematica dominante no es medible", file=sys.stderr)
+    if CONTROL_ANGLE not in rate_rows:
+        print(f"[06] ERROR: the {CONTROL_ANGLE} degree control run is missing; "
+              "the dominant systematic is not measurable", file=sys.stderr)
         return 1
 
-    lineas = []
-    fuentes = []
+    lines = []
+    sources = []
 
-    # --- 1. Repetibilidad entre corridas -----------------------------------
-    r_ref = tasas_json[ANGULO_REFERENCIA]["tasa_viva_hz"]
-    e_ref = tasas_json[ANGULO_REFERENCIA]["error_tasa_viva_hz"]
-    r_ctl = tasas_json[ANGULO_CONTROL]["tasa_viva_hz"]
-    e_ctl = tasas_json[ANGULO_CONTROL]["error_tasa_viva_hz"]
+    # --- 1. Run-to-run repeatability ---------------------------------------
+    r_ref = rate_rows[REFERENCE_ANGLE]["live_rate_hz"]
+    e_ref = rate_rows[REFERENCE_ANGLE]["live_rate_error_hz"]
+    r_ctl = rate_rows[CONTROL_ANGLE]["live_rate_hz"]
+    e_ctl = rate_rows[CONTROL_ANGLE]["live_rate_error_hz"]
 
-    cociente = r_ctl / r_ref
-    error_cociente = np.sqrt((e_ctl / r_ref) ** 2 + (r_ctl * e_ref / r_ref**2) ** 2)
-    discrepancia = abs(1.0 - cociente)
-    sigmas_discrepancia = discrepancia / error_cociente
+    ratio = r_ctl / r_ref
+    ratio_error = np.sqrt((e_ctl / r_ref) ** 2 + (r_ctl * e_ref / r_ref**2) ** 2)
+    discrepancy = abs(1.0 - ratio)
+    discrepancy_sigmas = discrepancy / ratio_error
 
-    lineas += [
+    normalisation = provenance.read_product(args.tables, "04_normalization")
+    row_45 = next(r for r in normalisation["rows"] if r["angle_deg"] == 45)
+    drop_0_45 = 1.0 - row_45["normalised"]
+
+    lines += [
         "=" * 78,
-        "1. REPETIBILIDAD ENTRE CORRIDAS (la sistematica dominante)",
+        "1. RUN-TO-RUN REPEATABILITY (the dominant systematic)",
         "=" * 78,
-        f"El archivo de {ANGULO_CONTROL} grados y el de {ANGULO_REFERENCIA} grados "
-        "miden el MISMO angulo.",
-        f"  R({ANGULO_REFERENCIA:>3} grados) = {r_ref:.4f} +- {e_ref:.4f} 1/s",
-        f"  R({ANGULO_CONTROL:>3} grados) = {r_ctl:.4f} +- {e_ctl:.4f} 1/s",
-        f"  cociente = {cociente:.4f} +- {error_cociente:.4f}, frente a 1 esperado",
-        f"  discrepancia = {100 * discrepancia:.1f} % "
-        f"({sigmas_discrepancia:.2f} sigma)",
+        f"The {CONTROL_ANGLE} degree file and the {REFERENCE_ANGLE} degree file "
+        "measure the SAME angle.",
+        f"  R({REFERENCE_ANGLE:>3} deg) = {r_ref:.4f} +- {e_ref:.4f} 1/s",
+        f"  R({CONTROL_ANGLE:>3} deg) = {r_ctl:.4f} +- {e_ctl:.4f} 1/s",
+        f"  ratio = {ratio:.4f} +- {ratio_error:.4f}, against the expected 1",
+        f"  discrepancy = {100 * discrepancy:.1f} % "
+        f"({discrepancy_sigmas:.2f} sigma)",
         "",
-        "Interpretacion honesta: la discrepancia no esta establecida como efecto "
-        f"({sigmas_discrepancia:.2f} sigma no basta para",
-        "afirmar que las dos corridas difieren de verdad). Pero como ESCALA del "
-        "sistematico",
-        "entre corridas es la mejor informacion que hay, y es la unica que este "
-        "conjunto",
-        "permite medir en vez de suponer.",
+        "Honest reading: the discrepancy is not established as an effect "
+        f"({discrepancy_sigmas:.2f} sigma is not",
+        "enough to assert that the two runs really differ). But as the SCALE of "
+        "the run-to-run",
+        "systematic it is the best information available, and the only one this "
+        "data set allows",
+        "to be measured rather than assumed.",
         "",
-        "Y esa escala es grande comparada con lo que el analisis pretende "
-        "interpretar:",
+        "And that scale is large next to what the analysis is trying to "
+        "interpret:",
+        f"  total drop from 0 to 45 degrees:            {100 * drop_0_45:.1f} %",
+        f"  discrepancy between two measurements of 0:  {100 * discrepancy:.1f} %",
+        "",
+        "The systematic between two runs at the SAME angle is of the same size "
+        "as the entire",
+        "drop from 0 to 45 degrees. Put plainly: it eats the whole signal the "
+        "fit is trying to",
+        "interpret. That single sentence is the result of the analysis.",
     ]
-
-    normalizadas = provenance.leer_producto(args.tables, "04_normalization")
-    fila_45 = next(f for f in normalizadas["filas"] if f["angulo_deg"] == 45)
-    caida_0_45 = 1.0 - fila_45["normalizada"]
-    lineas += [
-        f"  caida total de 0 a 45 grados:        {100 * caida_0_45:.1f} %",
-        f"  discrepancia entre dos medidas de 0: {100 * discrepancia:.1f} %",
-        "",
-        "El sistematico entre corridas del mismo angulo es MAYOR que la caida "
-        "completa",
-        "de 0 a 45 grados. Dicho de otro modo: se come toda la senal que el "
-        "ajuste",
-        "pretende interpretar. Esta sola frase resume el resultado del analisis.",
-    ]
-    fuentes.append({
-        "fuente": "repetibilidad entre corridas",
-        "efecto_relativo": float(discrepancia),
-        "medida_o_estimada": "medida",
-        "detalle": f"control de {ANGULO_CONTROL} grados frente a "
-                   f"{ANGULO_REFERENCIA} grados, {sigmas_discrepancia:.2f} sigma",
+    sources.append({
+        "source": "run-to-run repeatability",
+        "relative_effect": float(discrepancy),
+        "measured_or_estimated": "measured",
+        "detail": f"{CONTROL_ANGLE} degree control against {REFERENCE_ANGLE} "
+                  f"degrees, {discrepancy_sigmas:.2f} sigma",
     })
 
-    # --- 2. Tiempo vivo ------------------------------------------------------
-    corridas = io.load_all(args.data_dir)
-    tasas_obj = {a: rates.calcular_tasa(c) for a, c in corridas.items()}
-    fracciones = np.array([t.fraccion_muerta for t in tasas_obj.values()])
-    efecto_absoluto = float(fracciones.mean() / (1 - fracciones.mean()))
+    # --- 2. Live time --------------------------------------------------------
+    runs = io.load_all(args.data_dir)
+    computed = {a: rates.compute_rate(r) for a, r in runs.items()}
+    fractions = np.array([r.dead_fraction for r in computed.values()])
+    absolute_effect = float(fractions.mean() / (1 - fractions.mean()))
 
-    norm_pared = {a: t.tasa_pared / tasas_obj[ANGULO_REFERENCIA].tasa_pared
-                  for a, t in tasas_obj.items()}
-    norm_viva = {a: t.tasa_viva / tasas_obj[ANGULO_REFERENCIA].tasa_viva
-                 for a, t in tasas_obj.items()}
-    efecto_cocientes = max(
-        abs(norm_viva[a] - norm_pared[a]) / norm_pared[a] for a in norm_viva
-    )
+    wall_norm = {a: r.wall_rate / computed[REFERENCE_ANGLE].wall_rate
+                 for a, r in computed.items()}
+    live_norm = {a: r.live_rate / computed[REFERENCE_ANGLE].live_rate
+                 for a, r in computed.items()}
+    ratio_effect = max(abs(live_norm[a] - wall_norm[a]) / wall_norm[a]
+                       for a in live_norm)
 
-    lineas += [
+    lines += [
         "",
         "=" * 78,
-        "2. TIEMPO VIVO",
+        "2. LIVE TIME",
         "=" * 78,
-        f"Fraccion muerta entre {100 * fracciones.min():.2f} % y "
-        f"{100 * fracciones.max():.2f} %, dispersion "
-        f"{100 * fracciones.std():.3f} puntos.",
-        f"  efecto sobre la tasa ABSOLUTA:   {100 * efecto_absoluto:.2f} %",
-        f"  efecto sobre los COCIENTES:      {100 * efecto_cocientes:.2f} %",
+        f"Dead fraction between {100 * fractions.min():.2f} % and "
+        f"{100 * fractions.max():.2f} %, spread {100 * fractions.std():.3f} points.",
+        f"  effect on the ABSOLUTE rate:  {100 * absolute_effect:.2f} %",
+        f"  effect on the RATIOS:         {100 * ratio_effect:.2f} %",
         "",
-        "Corregir por tiempo vivo es obligatorio y el analisis anterior no lo",
-        "hacia, pero conviene no exagerar lo que arregla: como la fraccion muerta",
-        "es casi identica en las ocho corridas, se cancela en los cocientes y deja",
-        "la forma angular practicamente donde estaba. Importa para la tasa",
-        "absoluta, no para la dependencia con el angulo.",
+        "Correcting for live time is mandatory and the previous analysis did not",
+        "do it, but it is worth not overstating what it fixes: since the dead",
+        "fraction is nearly identical across the eight runs, it cancels in the",
+        "ratios and leaves the angular shape essentially where it was. It matters",
+        "for the absolute rate, not for the angular dependence.",
     ]
-    fuentes.append({
-        "fuente": "tiempo vivo (sobre cocientes)",
-        "efecto_relativo": float(efecto_cocientes),
-        "medida_o_estimada": "medida",
-        "detalle": f"efecto sobre la tasa absoluta: {100 * efecto_absoluto:.2f} %",
+    sources.append({
+        "source": "live time (on ratios)",
+        "relative_effect": float(ratio_effect),
+        "measured_or_estimated": "measured",
+        "detail": f"effect on the absolute rate: {100 * absolute_effect:.2f} %",
     })
 
-    # --- 3. Ventana temporal -------------------------------------------------
-    desviaciones_ventana = []
-    esperadas_ventana = []
-    for angulo, corrida in corridas.items():
-        tiempos = corrida.tiempo_relativo_s[corrida.coincidente == 1]
-        mitad = tiempos[-1] / 2.0
-        primera = tiempos[tiempos <= mitad]
-        if len(primera) < 2:
+    # --- 3. Time window ------------------------------------------------------
+    observed_shifts = []
+    expected_shifts = []
+    for angle, run in runs.items():
+        times = run.elapsed_s[run.coincident == 1]
+        half = times[-1] / 2.0
+        first = times[times <= half]
+        if len(first) < 2:
             continue
-        tasa_mitad = (len(primera) - 1) / (primera[-1] - primera[0])
-        desviaciones_ventana.append(
-            abs(tasa_mitad - tasas_obj[angulo].tasa_pared) / tasas_obj[angulo].tasa_pared
+        half_rate = (len(first) - 1) / (first[-1] - first[0])
+        observed_shifts.append(
+            abs(half_rate - computed[angle].wall_rate) / computed[angle].wall_rate
         )
-        # Comparar media mitad con el total: las dos comparten los eventos de la
-        # primera mitad, y la varianza de la diferencia relativa vale
-        # 1/N_1 - 1/N con N_1 los de la mitad y N los de la corrida entera.
-        n_mitad, n_total = len(primera) - 1, len(tiempos) - 1
-        esperadas_ventana.append(np.sqrt(max(1 / n_mitad - 1 / n_total, 0.0)))
+        # Half against whole share the events of the first half, so the variance
+        # of the relative difference is 1/N_1 - 1/N.
+        n_half, n_total = len(first) - 1, len(times) - 1
+        expected_shifts.append(np.sqrt(max(1 / n_half - 1 / n_total, 0.0)))
 
-    desviaciones_ventana = np.array(desviaciones_ventana)
-    esperadas_ventana = np.array(esperadas_ventana)
-    efecto_ventana = float(np.max(desviaciones_ventana))
-    esperado_tipico = float(np.mean(esperadas_ventana))
-    exceso = float(np.sqrt(max(
-        np.mean(desviaciones_ventana**2) - np.mean(esperadas_ventana**2), 0.0
+    observed_shifts = np.array(observed_shifts)
+    expected_shifts = np.array(expected_shifts)
+    window_observed = float(np.max(observed_shifts))
+    window_expected = float(np.mean(expected_shifts))
+    window_excess = float(np.sqrt(max(
+        np.mean(observed_shifts**2) - np.mean(expected_shifts**2), 0.0
     )))
 
-    lineas += [
+    lines += [
         "",
         "=" * 78,
-        "3. VENTANA TEMPORAL",
+        "3. TIME WINDOW",
         "=" * 78,
-        "Comparando la primera mitad de cada corrida contra la corrida entera:",
-        f"  desviacion maxima observada:      {100 * efecto_ventana:.2f} %",
-        f"  mediana observada:                "
-        f"{100 * np.median(desviaciones_ventana):.2f} %",
-        f"  esperada solo por estadistica:    {100 * esperado_tipico:.2f} %",
-        f"  exceso sobre lo estadistico:      {100 * exceso:.2f} %",
+        "Comparing the first half of each run against the whole run:",
+        f"  largest observed shift:        {100 * window_observed:.2f} %",
+        f"  median observed:               {100 * np.median(observed_shifts):.2f} %",
+        f"  expected from statistics:      {100 * window_expected:.2f} %",
+        f"  excess over statistics:        {100 * window_excess:.2f} %",
         "",
-        "ESTA FILA NO ES UNA SISTEMATICA y no debe leerse como tal. Media corrida",
-        "tiene la mitad de eventos, asi que su tasa fluctua lo que manda Poisson;",
-        "el numero observado es del tamano de esa fluctuacion. Lo que entra en el",
-        "presupuesto de sistematicas es el EXCESO sobre ella, que aqui es",
-        f"{100 * exceso:.2f} %. Coincide con lo visto en 03_timeseries, donde la",
-        "dispersion por bins dentro de cada corrida es compatible con Poisson: la",
-        "inestabilidad esta ENTRE corridas, no dentro de ellas.",
+        "THIS ROW IS NOT A SYSTEMATIC and must not be read as one. Half a run",
+        "holds half the events, so its rate fluctuates by whatever Poisson",
+        "dictates; the observed number is the size of that fluctuation. What",
+        "enters the systematic budget is the EXCESS over it, which here is",
+        f"{100 * window_excess:.2f} %. This matches 03_timeseries, where the bin",
+        "spread within each run is consistent with Poisson: the instability is",
+        "BETWEEN runs, not within them.",
     ]
-    fuentes.append({
-        "fuente": "ventana temporal (exceso sobre estadistica)",
-        "efecto_relativo": exceso,
-        "medida_o_estimada": "medida",
-        "detalle": f"observado {100 * efecto_ventana:.2f} %, esperado por "
-                   f"estadistica {100 * esperado_tipico:.2f} %; solo el exceso "
-                   f"cuenta como sistematica",
+    sources.append({
+        "source": "time window (excess over statistics)",
+        "relative_effect": window_excess,
+        "measured_or_estimated": "measured",
+        "detail": f"observed {100 * window_observed:.2f} %, expected from "
+                  f"statistics {100 * window_expected:.2f} %; only the excess "
+                  f"counts as a systematic",
     })
 
-    # --- 4. Angulo de referencia --------------------------------------------
-    angulos_fisicos = sorted(a for a in tasas_json if a != ANGULO_CONTROL)
-    variacion_referencia = []
-    base = {a: tasas_json[a]["tasa_viva_hz"] / r_ref for a in angulos_fisicos}
-    for alterno in angulos_fisicos:
-        r_alt = tasas_json[alterno]["tasa_viva_hz"]
-        for a in angulos_fisicos:
-            propio = tasas_json[a]["tasa_viva_hz"] / r_alt
-            reescalado = propio * (r_alt / r_ref)
-            variacion_referencia.append(abs(reescalado - base[a]))
-    efecto_referencia = float(np.max(variacion_referencia))
+    # --- 4. Reference angle --------------------------------------------------
+    physical_angles = sorted(a for a in rate_rows if a != CONTROL_ANGLE)
+    reference_variation = []
+    baseline = {a: rate_rows[a]["live_rate_hz"] / r_ref for a in physical_angles}
+    for alternative in physical_angles:
+        r_alt = rate_rows[alternative]["live_rate_hz"]
+        for a in physical_angles:
+            own = rate_rows[a]["live_rate_hz"] / r_alt
+            rescaled = own * (r_alt / r_ref)
+            reference_variation.append(abs(rescaled - baseline[a]))
+    reference_effect = float(np.max(reference_variation))
 
-    lineas += [
+    lines += [
         "",
         "=" * 78,
-        "4. ANGULO DE REFERENCIA",
+        "4. REFERENCE ANGLE",
         "=" * 78,
-        "Normalizar a otro angulo reescala todos los cocientes por un factor",
-        "comun y no cambia la FORMA del perfil: la variacion residual es",
-        f"{efecto_referencia:.2e}, es decir cero salvo redondeo.",
-        "Lo que si cambia es la incertidumbre: el angulo de referencia inyecta su",
-        f"propio error en los siete cocientes ({100 * e_ref / r_ref:.1f} % aqui), y",
-        "por eso la inferencia de 05_fits se hace sobre cuentas crudas y no sobre",
-        "cocientes, donde ese error comun quedaria contado siete veces como si",
-        "fuese independiente.",
+        "Normalising to a different angle rescales every ratio by a common",
+        "factor and does not change the SHAPE of the profile: the residual",
+        f"variation is {reference_effect:.2e}, i.e. zero up to rounding.",
+        "What does change is the uncertainty: the reference angle injects its own",
+        f"error into all seven ratios ({100 * e_ref / r_ref:.1f} % here), which is",
+        "why the inference in 05_fits works on raw counts rather than ratios,",
+        "where that common error would be counted seven times as if independent.",
     ]
-    fuentes.append({
-        "fuente": "angulo de referencia",
-        "efecto_relativo": efecto_referencia,
-        "medida_o_estimada": "medida",
-        "detalle": "solo reescala; el error de la referencia se trata en 05_fits",
+    sources.append({
+        "source": "reference angle",
+        "relative_effect": reference_effect,
+        "measured_or_estimated": "measured",
+        "detail": "rescaling only; the reference error is handled in 05_fits",
     })
 
-    # --- 5. Tamano de bin ----------------------------------------------------
-    lineas += [
+    # --- 5. Bin size ---------------------------------------------------------
+    lines += [
         "",
         "=" * 78,
-        "5. TAMANO DE BIN",
+        "5. BIN SIZE",
         "=" * 78,
-        "En el analisis anterior la duracion de cada corrida se truncaba a un",
-        "multiplo entero de --bin-seconds, de modo que un parametro grafico movia",
-        "la tasa publicada: 1.8118 1/s con bin de 1 s frente a 1.8194 1/s con bin",
-        "de 60 s, y el cociente I(90)/I(0) de 0.8079 a 0.8148.",
-        "En este pipeline el binning solo interviene en las figuras de",
-        "03_timeseries. La tasa se calcula sobre la ventana completa [t1, tN] y",
-        "calcular_tasa no admite ningun parametro de bin, asi que el efecto es",
-        "exactamente cero por construccion, no pequeno.",
+        "In the previous analysis each run's duration was truncated to a whole",
+        "multiple of --bin-seconds, so a plotting parameter moved the published",
+        "rate: 1.8118 1/s with 1 s bins against 1.8194 1/s with 60 s bins, and",
+        "the ratio I(90)/I(0) from 0.8079 to 0.8148.",
+        "In this pipeline binning enters only the 03_timeseries figures. Rates",
+        "are computed over the full [t1, tN] window and compute_rate takes no bin",
+        "parameter at all, so the effect is exactly zero by construction, not",
+        "merely small.",
     ]
-    fuentes.append({
-        "fuente": "tamano de bin",
-        "efecto_relativo": 0.0,
-        "medida_o_estimada": "eliminada por construccion",
-        "detalle": "antes 0.4 % sobre la tasa; ahora el binning no entra en la fisica",
+    sources.append({
+        "source": "bin size",
+        "relative_effect": 0.0,
+        "measured_or_estimated": "eliminated by construction",
+        "detail": "previously 0.4 % on the rate; binning no longer enters the physics",
     })
 
-    # --- 6. Reevaluacion de la significancia --------------------------------
-    angulos = np.array(angulos_fisicos, dtype=float)
-    cuentas = np.array([tasas_json[int(a)]["n_intervalos"] for a in angulos], float)
-    tiempos = np.array([tasas_json[int(a)]["tiempo_vivo_s"] for a in angulos])
-    tasas_obs = cuentas / tiempos
-    sigma_estadistico = tasas_obs / np.sqrt(cuentas)
-    forma2 = models.forma_cosn(models.coseno_anclado(angulos), 2.0)
+    # --- 6. Reassessment -----------------------------------------------------
+    angles = np.array(physical_angles, dtype=float)
+    counts = np.array([rate_rows[int(a)]["n_intervals"] for a in angles], float)
+    times = np.array([rate_rows[int(a)]["live_time_s"] for a in angles])
+    observed_rate = counts / times
+    statistical_sigma = observed_rate / np.sqrt(counts)
+    shape2 = models.cosn_shape(models.clamped_cosine(angles), 2.0)
 
-    f_sys = float(discrepancia)
+    f_sys = float(discrepancy)
 
     def delta_chi2(f):
-        sigma = np.sqrt(sigma_estadistico**2 + (f * tasas_obs) ** 2)
-        pesos = 1.0 / sigma**2
-        media = np.sum(pesos * tasas_obs) / np.sum(pesos)
-        chi2_constante = float(np.sum(((tasas_obs - media) / sigma) ** 2))
-        _, _, chi2_modulado = ajuste_ponderado(tasas_obs, sigma, forma2)
-        return chi2_constante - chi2_modulado
+        sigma = np.sqrt(statistical_sigma**2 + (f * observed_rate) ** 2)
+        weights = 1.0 / sigma**2
+        mean = np.sum(weights * observed_rate) / np.sum(weights)
+        chi2_constant = float(np.sum(((observed_rate - mean) / sigma) ** 2))
+        _, _, chi2_modulated = weighted_fit(observed_rate, sigma, shape2)
+        return chi2_constant - chi2_modulated
 
-    barrido = []
+    scan = []
     for f in (0.0, 0.02, 0.03, 0.05, f_sys, 0.10):
-        sigma = np.sqrt(sigma_estadistico**2 + (f * tasas_obs) ** 2)
-        pesos = 1.0 / sigma**2
-        media = float(np.sum(pesos * tasas_obs) / np.sum(pesos))
-        chi2_constante = float(np.sum(((tasas_obs - media) / sigma) ** 2))
-        s_ajustado, b_ajustado, chi2_modulado = ajuste_ponderado(tasas_obs, sigma, forma2)
-        d = chi2_constante - chi2_modulado
-        barrido.append({
+        sigma = np.sqrt(statistical_sigma**2 + (f * observed_rate) ** 2)
+        weights = 1.0 / sigma**2
+        mean = float(np.sum(weights * observed_rate) / np.sum(weights))
+        chi2_constant = float(np.sum(((observed_rate - mean) / sigma) ** 2))
+        s_fitted, _, chi2_modulated = weighted_fit(observed_rate, sigma, shape2)
+        d = chi2_constant - chi2_modulated
+        scan.append({
             "f_sys": float(f),
-            "chi2_constante": chi2_constante,
-            "p_constante": float(stats.chi2.sf(chi2_constante, len(angulos) - 1)),
-            "S_hz": float(s_ajustado),
+            "chi2_constant": chi2_constant,
+            "p_constant": float(stats.chi2.sf(chi2_constant, len(angles) - 1)),
+            "S_hz": float(s_fitted),
             "delta_chi2": float(d),
-            "p_modulacion": float(stats.chi2.sf(d, 1)),
+            "p_modulation": float(stats.chi2.sf(d, 1)),
         })
 
-    f_critico = float(optimize.brentq(
+    f_critical = float(optimize.brentq(
         lambda f: delta_chi2(f) - stats.chi2.isf(0.05, 1), 1e-6, 0.5
     ))
-    f_compatible = models.sistematico_necesario(tasas_obs, sigma_estadistico, 0.05)
+    f_compatible = models.required_systematic(observed_rate, statistical_sigma, 0.05)
 
-    lineas += [
+    lines += [
         "",
         "=" * 78,
-        "6. REEVALUACION CON LA SISTEMATICA MEDIDA",
+        "6. REASSESSMENT WITH THE MEASURED SYSTEMATIC",
         "=" * 78,
-        "05_fits encuentra que la componente modulada mejora el ajuste con",
-        "p = 0.008, pero eso supone que la unica incertidumbre es la de conteo.",
-        "Anadiendo el sistematico entre corridas en cuadratura:",
+        "05_fits finds the modulated component improving the fit at p = 0.008,",
+        "but that assumes counting statistics is the only uncertainty. Adding the",
+        "run-to-run systematic in quadrature:",
         "",
-        f"{'f_sys':>8} {'chi2_cte':>10} {'p_cte':>8} {'S [1/s]':>9} "
-        f"{'Dchi2':>8} {'p_mod':>8}  veredicto",
-        "-" * 74,
+        f"{'f_sys':>8} {'chi2_const':>11} {'p_const':>9} {'S [1/s]':>9} "
+        f"{'Dchi2':>8} {'p_mod':>8}  verdict",
+        "-" * 76,
     ]
-    for b in barrido:
-        marca = "  <- el que mide el control" if abs(b["f_sys"] - f_sys) < 1e-12 else ""
-        lineas.append(
-            f"{100 * b['f_sys']:>7.1f}% {b['chi2_constante']:>10.2f} "
-            f"{b['p_constante']:>8.4f} {b['S_hz']:>9.4f} {b['delta_chi2']:>8.2f} "
-            f"{b['p_modulacion']:>8.4f}  "
-            f"{'significativa' if b['p_modulacion'] < 0.05 else 'NO significativa'}"
-            f"{marca}"
+    for row in scan:
+        mark = "  <- measured by the control" if abs(row["f_sys"] - f_sys) < 1e-12 else ""
+        lines.append(
+            f"{100 * row['f_sys']:>7.2f}% {row['chi2_constant']:>11.2f} "
+            f"{row['p_constant']:>9.4f} {row['S_hz']:>9.4f} "
+            f"{row['delta_chi2']:>8.2f} {row['p_modulation']:>8.4f}  "
+            f"{'significant' if row['p_modulation'] < 0.05 else 'NOT significant'}"
+            f"{mark}"
         )
 
-    lineas += [
-        "-" * 74,
+    lines += [
+        "-" * 76,
         "",
-        f"La modulacion deja de ser significativa a partir de un sistematico del "
-        f"{100 * f_critico:.2f} %.",
-        f"El control de repetibilidad mide {100 * f_sys:.1f} %, casi el doble.",
-        f"La hipotesis de tasa constante pasa a ser compatible con un "
+        f"The modulation stops being significant beyond a systematic of "
+        f"{100 * f_critical:.2f} %.",
+        f"The repeatability control measures {100 * f_sys:.1f} %, nearly twice that.",
+        f"The constant-rate hypothesis becomes consistent at "
         f"{100 * f_compatible:.2f} %.",
         "",
-        "CONCLUSION DEL ANALISIS:",
-        "La preferencia por una componente modulada que aparece bajo estadistica",
-        "de conteo pura NO sobrevive al sistematico entre corridas que el propio",
-        "conjunto de datos mide. No se puede afirmar que este montaje haya",
-        "detectado la dependencia angular del flujo de muones. Lo que si se puede",
-        "afirmar es una cota superior sobre cuanta modulacion seria compatible con",
-        "lo observado.",
+        "CONCLUSION OF THE ANALYSIS:",
+        "The preference for a modulated component that appears under pure",
+        "counting statistics does NOT survive the run-to-run systematic that the",
+        "data set itself measures. It cannot be claimed that this setup detected",
+        "the angular dependence of the muon flux. What can be stated is an upper",
+        "bound on how much modulation would be consistent with what was observed.",
     ]
 
-    # --- Cota superior con sistematico incluido -----------------------------
-    sigma_total = np.sqrt(sigma_estadistico**2 + (f_sys * tasas_obs) ** 2)
-    s_mejor, b_mejor, chi2_min = ajuste_ponderado(tasas_obs, sigma_total, forma2)
+    # --- 7. Upper bound with the systematic folded in ------------------------
+    total_sigma = np.sqrt(statistical_sigma**2 + (f_sys * observed_rate) ** 2)
+    s_best, _, chi2_min = weighted_fit(observed_rate, total_sigma, shape2)
 
-    def chi2_de_s(s):
-        def chi2_dado_b(b):
-            return float(np.sum(((tasas_obs - (s * forma2 + b)) / sigma_total) ** 2))
-        r = optimize.minimize_scalar(chi2_dado_b, bounds=(0.0, 5.0), method="bounded")
-        return float(r.fun)
+    def chi2_of_s(s):
+        return float(optimize.minimize_scalar(
+            lambda b: float(np.sum(((observed_rate - (s * shape2 + b)) / total_sigma) ** 2)),
+            bounds=(0.0, 5.0), method="bounded",
+        ).fun)
 
-    objetivo = chi2_min + stats.chi2.isf(0.10, 1)  # 95 % unilateral
-    s_cota = float(optimize.brentq(lambda s: chi2_de_s(s) - objetivo,
-                                   max(s_mejor, 0.0), 5.0))
-    r_dado_cota = optimize.minimize_scalar(
-        lambda b: float(np.sum(((tasas_obs - (s_cota * forma2 + b)) / sigma_total) ** 2)),
+    target = chi2_min + stats.chi2.isf(0.10, 1)  # one-sided 95 %
+    s_bound = float(optimize.brentq(lambda s: chi2_of_s(s) - target,
+                                    max(s_best, 0.0), 5.0))
+    b_at_bound = float(optimize.minimize_scalar(
+        lambda b: float(np.sum(((observed_rate - (s_bound * shape2 + b)) / total_sigma) ** 2)),
         bounds=(0.0, 5.0), method="bounded",
-    ).x
-    fraccion_cota = s_cota / (s_cota + r_dado_cota)
+    ).x)
+    bound_fraction = s_bound / (s_bound + b_at_bound)
 
-    ajuste_05 = provenance.leer_producto("results/fits", "05_fits")
-    cota_estadistica = ajuste_05["modulacion_n2"]["fraccion_modulada_cota_95"]
+    fits_product = provenance.read_product("results/fits", "05_fits")
+    statistical_bound = fits_product["modulation_n2"]["modulated_fraction_bound_95"]
 
-    lineas += [
+    lines += [
         "",
         "=" * 78,
-        "7. COTA SUPERIOR SOBRE LA FRACCION MODULADA",
+        "7. UPPER BOUND ON THE MODULATED FRACTION",
         "=" * 78,
-        f"  solo estadistica (05_fits):        < {100 * cota_estadistica:.1f} %",
-        f"  con el sistematico del {100 * f_sys:.1f} %:      "
-        f"< {100 * fraccion_cota:.1f} %",
+        f"  statistics only (05_fits):          < {100 * statistical_bound:.1f} %",
+        f"  with the {100 * f_sys:.1f} % systematic:        "
+        f"< {100 * bound_fraction:.1f} %",
         "",
-        "La segunda es la que se publica: incluye la unica sistematica que este",
-        "conjunto permite medir. Es el resultado cuantitativo del analisis.",
+        "The second is the one published: it includes the only systematic this",
+        "data set allows to be measured. It is the quantitative result of the",
+        "analysis.",
     ]
 
-    texto = "\n".join(lineas)
-    print(texto)
+    text = "\n".join(lines)
+    print(text)
 
-    # --- Figura --------------------------------------------------------------
     fig, (ax, ax2) = plt.subplots(1, 2, figsize=(11.0, 4.4), layout="constrained")
 
-    rejilla_f = np.linspace(0.0, 0.12, 121)
-    p_valores = [stats.chi2.sf(delta_chi2(f), 1) for f in rejilla_f]
-    ax.plot(100 * rejilla_f, p_valores, color=plotting.COLOR_DATOS, lw=2)
-    ax.axhline(0.05, color=plotting.COLOR_MODELO, ls="--", lw=1.4,
-               label="p = 0.05")
-    ax.axvline(100 * f_sys, color=plotting.COLOR_ALTERNATIVO, lw=1.8,
-               label=f"medido por el control: {100 * f_sys:.1f} %")
-    ax.axvspan(100 * f_critico, 12, color=plotting.COLOR_ALTERNATIVO, alpha=0.12)
-    ax.set_xlabel("sistematico entre corridas [%]")
-    ax.set_ylabel("p-valor de la componente modulada")
-    ax.set_title("La senal no sobrevive a la sistematica medida")
+    grid = np.linspace(0.0, 0.12, 121)
+    p_values = [stats.chi2.sf(delta_chi2(f), 1) for f in grid]
+    ax.plot(100 * grid, p_values, color=plotting.COLOUR_DATA, lw=2)
+    ax.axhline(0.05, color=plotting.COLOUR_MODEL, ls="--", lw=1.4, label="p = 0.05")
+    ax.axvline(100 * f_sys, color=plotting.COLOUR_ALTERNATE, lw=1.8,
+               label=f"measured by the control: {100 * f_sys:.1f} %")
+    ax.axvspan(100 * f_critical, 12, color=plotting.COLOUR_ALTERNATE, alpha=0.12)
+    ax.set_xlabel("run-to-run systematic [%]")
+    ax.set_ylabel("p-value of the modulated component")
+    ax.set_title("The signal does not survive the measured systematic")
     ax.set_xlim(0, 12)
     ax.legend(fontsize=8)
 
-    etiquetas = [f["fuente"] for f in fuentes]
-    valores = [100 * f["efecto_relativo"] for f in fuentes]
-    posiciones = np.arange(len(etiquetas))
-    colores = [plotting.COLOR_MODELO if v == max(valores) else plotting.COLOR_DATOS
-               for v in valores]
-    ax2.barh(posiciones, valores, color=colores, alpha=0.85)
-    ax2.set_yticks(posiciones)
-    ax2.set_yticklabels(etiquetas, fontsize=8)
+    labels = [s["source"] for s in sources]
+    values = [100 * s["relative_effect"] for s in sources]
+    positions = np.arange(len(labels))
+    colours = [plotting.COLOUR_MODEL if v == max(values) else plotting.COLOUR_DATA
+               for v in values]
+    ax2.barh(positions, values, color=colours, alpha=0.85)
+    ax2.set_yticks(positions)
+    ax2.set_yticklabels(labels, fontsize=8)
     ax2.invert_yaxis()
-    ax2.set_xlabel("efecto relativo [%]")
-    ax2.set_title("Tabla de sistematicas")
-    for i, v in enumerate(valores):
+    ax2.set_xlabel("relative effect [%]")
+    ax2.set_title("Systematics budget")
+    for i, v in enumerate(values):
         ax2.text(v + 0.1, i, f"{v:.2f} %", va="center", fontsize=8)
-    ax2.set_xlim(0, max(valores) * 1.35)
+    ax2.set_xlim(0, max(values) * 1.35)
 
-    rutas = plotting.guardar(fig, args.out_figures, "06_systematics")
-    print(f"[06] figura -> {rutas[0].name}")
+    paths = plotting.save(fig, args.out_figures, "06_systematics")
+    print(f"[06] figure -> {paths[0].name}")
 
-    ruta_json, ruta_txt = provenance.escribir_producto(
+    json_path, _ = provenance.write_product(
         args.tables, "06_systematics",
-        datos={
-            "fuentes": fuentes,
-            "sistematico_dominante": f_sys,
-            "sistematico_critico_para_significancia": f_critico,
-            "sistematico_para_compatibilidad_constante": f_compatible,
-            "barrido": barrido,
-            "cota_fraccion_modulada_solo_estadistica": cota_estadistica,
-            "cota_fraccion_modulada_con_sistematico": float(fraccion_cota),
-            "S_cota_hz": s_cota,
+        data={
+            "sources": sources,
+            "dominant_systematic": f_sys,
+            "critical_systematic_for_significance": f_critical,
+            "systematic_for_constant_compatibility": f_compatible,
+            "scan": scan,
+            "modulated_fraction_bound_statistics_only": statistical_bound,
+            "modulated_fraction_bound_with_systematic": float(bound_fraction),
+            "S_bound_hz": s_bound,
         },
-        texto=texto,
-        parametros={"angulo_control": ANGULO_CONTROL,
-                    "angulo_referencia": ANGULO_REFERENCIA},
+        text=text,
+        parameters={"control_angle": CONTROL_ANGLE,
+                    "reference_angle": REFERENCE_ANGLE},
     )
-    print(f"[06] escrito {ruta_json}")
+    print(f"[06] wrote {json_path}")
     return 0
 
 

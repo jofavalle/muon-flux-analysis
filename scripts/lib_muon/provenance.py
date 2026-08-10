@@ -1,12 +1,12 @@
-"""Trazabilidad de los productos: versionado _vN y sello de procedencia.
+"""Traceability of the products: _vN versioning and provenance stamp.
 
-Dos reglas del repositorio se implementan aqui:
+Two repository rules are implemented here:
 
-- **Ningun script sobrescribe resultados.** Cada corrida escribe con sufijo
-  `_vN`, con N el siguiente libre. Un numero que ya se cito en el informe
-  tiene que seguir existiendo.
-- **Cada JSON lleva el hash del commit, los parametros y la semilla**, de modo
-  que cualquier cifra del informe es trazable hasta la corrida que la produjo.
+- **No script overwrites results.** Every run writes with a `_vN` suffix, N
+  being the next free index. A number already cited in the report must keep
+  existing.
+- **Every JSON carries the commit hash, the parameters and the seed**, so any
+  figure in the report is traceable back to the run that produced it.
 """
 
 from __future__ import annotations
@@ -22,157 +22,170 @@ from typing import Any
 
 import numpy as np
 
-SEMILLA_POR_DEFECTO = 20260810
+DEFAULT_SEED = 20260810
 
 
-def hash_commit() -> dict[str, Any]:
-    """Hash del commit actual y si el arbol tiene cambios sin comitear.
+def commit_hash() -> dict[str, Any]:
+    """Current commit hash and whether the inputs were committed.
 
-    Un resultado producido con el arbol sucio no es reproducible desde el
-    hash, y eso hay que registrarlo, no esconderlo.
+    A result produced from uncommitted code is not reproducible from the hash,
+    and that must be recorded, not hidden.
+
+    `inputs_clean` deliberately ignores anything under `results/`. What has to
+    be committed for a result to be reproducible is what PRODUCED it, the code
+    and the raw data. The products themselves cannot be, since a pipeline dirties
+    its own output directory as it writes: step 00 creates a file, and from step
+    01 onwards every product would otherwise stamp itself as dirty just for
+    existing. Reporting that would be noise, and noise in a provenance field is
+    worse than no field, because it trains the reader to ignore it.
     """
-    def git(*argumentos: str) -> str | None:
+    def git(*arguments: str) -> str | None:
         try:
             return subprocess.run(
-                ["git", *argumentos], capture_output=True, text=True, check=True,
+                ["git", *arguments], capture_output=True, text=True, check=True,
                 timeout=10,
             ).stdout.strip()
         except (subprocess.SubprocessError, OSError):
             return None
 
-    commit = git("rev-parse", "HEAD")
-    estado = git("status", "--porcelain")
+    status = git("status", "--porcelain")
+    if status is None:
+        inputs_clean = None
+    else:
+        dirty = [
+            line[3:] for line in status.splitlines()
+            if line[3:] and not line[3:].startswith("results/")
+        ]
+        inputs_clean = not dirty
     return {
-        "commit": commit,
-        "rama": git("rev-parse", "--abbrev-ref", "HEAD"),
-        "arbol_limpio": estado == "" if estado is not None else None,
+        "commit": git("rev-parse", "HEAD"),
+        "branch": git("rev-parse", "--abbrev-ref", "HEAD"),
+        "inputs_clean": inputs_clean,
     }
 
 
-def sello(parametros: dict[str, Any] | None = None,
-          semilla: int = SEMILLA_POR_DEFECTO) -> dict[str, Any]:
-    """Bloque de procedencia que se incrusta en todo JSON de results/."""
+def stamp(parameters: dict[str, Any] | None = None,
+          seed: int = DEFAULT_SEED) -> dict[str, Any]:
+    """Provenance block embedded in every JSON under results/."""
     return {
-        "generado_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-        "git": hash_commit(),
-        "semilla": semilla,
+        "generated_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "git": commit_hash(),
+        "seed": seed,
         "python": sys.version.split()[0],
         "numpy": np.__version__,
-        "plataforma": platform.platform(),
-        "parametros": parametros or {},
+        "platform": platform.platform(),
+        "parameters": parameters or {},
     }
 
 
-def siguiente_version(directorio: str | Path, base: str, extension: str = "json") -> int:
-    """Primer sufijo _vN libre para `base` en `directorio`."""
-    directorio = Path(directorio)
-    if not directorio.is_dir():
+def next_version(directory: str | Path, base: str, extension: str = "json") -> int:
+    """First free _vN suffix for `base` in `directory`."""
+    directory = Path(directory)
+    if not directory.is_dir():
         return 1
-    patron = re.compile(rf"^{re.escape(base)}_v(\d+)\.{re.escape(extension)}$")
-    usados = [
+    pattern = re.compile(rf"^{re.escape(base)}_v(\d+)\.{re.escape(extension)}$")
+    used = [
         int(m.group(1))
-        for ruta in directorio.iterdir()
-        if (m := patron.match(ruta.name))
+        for path in directory.iterdir()
+        if (m := pattern.match(path.name))
     ]
-    return max(usados) + 1 if usados else 1
+    return max(used) + 1 if used else 1
 
 
-def ultima_version(directorio: str | Path, base: str, extension: str = "json") -> int | None:
-    """Mayor sufijo _vN existente para `base`, o None si no hay ninguno."""
-    siguiente = siguiente_version(directorio, base, extension)
-    return siguiente - 1 if siguiente > 1 else None
+def latest_version(directory: str | Path, base: str, extension: str = "json") -> int | None:
+    """Highest existing _vN suffix for `base`, or None if there is none."""
+    following = next_version(directory, base, extension)
+    return following - 1 if following > 1 else None
 
 
-def leer_producto(directorio: str | Path, base: str) -> dict[str, Any]:
-    """Lee el JSON mas reciente de `base`, que es como se encadena el pipeline.
+def read_product(directory: str | Path, base: str) -> dict[str, Any]:
+    """Read the most recent JSON for `base`, which is how the pipeline chains.
 
-    Lanza FileNotFoundError con el paso que falta, de modo que ejecutar un
-    script fuera de orden diga que hay que correr antes en vez de fallar con
-    un error de mas abajo.
+    Raises FileNotFoundError naming the missing step, so running a script out
+    of order says what to run first instead of failing further down.
     """
-    directorio = Path(directorio)
-    version = ultima_version(directorio, base)
+    directory = Path(directory)
+    version = latest_version(directory, base)
     if version is None:
         raise FileNotFoundError(
-            f"no hay ningun {base}_vN.json en {directorio}. "
-            f"Ejecuta antes el paso {base.split('_')[0]} del pipeline."
+            f"no {base}_vN.json found in {directory}. "
+            f"Run pipeline step {base.split('_')[0]} first."
         )
-    ruta = directorio / f"{base}_v{version}.json"
-    return json.loads(ruta.read_text(encoding="utf-8"))
+    return json.loads((directory / f"{base}_v{version}.json").read_text(encoding="utf-8"))
 
 
-def _limpiar_no_finitos(valor: Any) -> Any:
-    """JSON no tiene infinito ni NaN. Se escriben como null, que es lo que
-    significan aqui: un ajuste sin valor finito, no un cero.
+def _strip_non_finite(value: Any) -> Any:
+    """JSON has no infinity and no NaN. They are written as null, which is what
+    they mean here: a fit with no finite value, not a zero.
 
-    Recorre el arbol entero antes de serializar. No basta con el `default=` de
-    json.dumps, que no se invoca para floats: json escribiria `Infinity` y
-    `NaN`, que no son JSON valido y que ningun otro lector aceptaria.
+    Walks the whole tree before serialising. The `default=` hook of json.dumps
+    is not enough, since it is never invoked for floats: json would write
+    `Infinity` and `NaN`, which are not valid JSON and which no other reader
+    would accept.
     """
-    if isinstance(valor, (np.floating, float)):
-        v = float(valor)
+    if isinstance(value, (np.floating, float)):
+        v = float(value)
         return v if np.isfinite(v) else None
-    if isinstance(valor, np.integer):
-        return int(valor)
-    if isinstance(valor, np.bool_):
-        return bool(valor)
-    if isinstance(valor, np.ndarray):
-        return _limpiar_no_finitos(valor.tolist())
-    if isinstance(valor, dict):
-        return {k: _limpiar_no_finitos(v) for k, v in valor.items()}
-    if isinstance(valor, (list, tuple)):
-        return [_limpiar_no_finitos(x) for x in valor]
-    return valor
+    if isinstance(value, np.integer):
+        return int(value)
+    if isinstance(value, np.bool_):
+        return bool(value)
+    if isinstance(value, np.ndarray):
+        return _strip_non_finite(value.tolist())
+    if isinstance(value, dict):
+        return {k: _strip_non_finite(v) for k, v in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_strip_non_finite(x) for x in value]
+    return value
 
 
-def _json_serializable(objeto: Any) -> Any:
-    """Solo se invoca para tipos que json no sabe serializar por si mismo."""
-    if isinstance(objeto, np.integer):
-        return int(objeto)
-    if isinstance(objeto, np.floating):
-        return _limpiar_no_finitos(float(objeto))
-    if isinstance(objeto, np.ndarray):
-        return _limpiar_no_finitos(objeto.tolist())
-    if isinstance(objeto, np.bool_):
-        return bool(objeto)
-    raise TypeError(f"no serializable a JSON: {type(objeto)}")
+def _json_default(obj: Any) -> Any:
+    """Only invoked for types json cannot serialise on its own."""
+    if isinstance(obj, np.integer):
+        return int(obj)
+    if isinstance(obj, np.floating):
+        return _strip_non_finite(float(obj))
+    if isinstance(obj, np.ndarray):
+        return _strip_non_finite(obj.tolist())
+    if isinstance(obj, np.bool_):
+        return bool(obj)
+    raise TypeError(f"not JSON serialisable: {type(obj)}")
 
 
-def escribir_producto(
-    directorio: str | Path,
+def write_product(
+    directory: str | Path,
     base: str,
-    datos: dict[str, Any],
-    texto: str,
-    parametros: dict[str, Any] | None = None,
-    semilla: int = SEMILLA_POR_DEFECTO,
+    data: dict[str, Any],
+    text: str,
+    parameters: dict[str, Any] | None = None,
+    seed: int = DEFAULT_SEED,
 ) -> tuple[Path, Path]:
-    """Escribe el par .json y .txt con el siguiente _vN libre.
+    """Write the paired .json and .txt with the next free _vN.
 
-    Productos pareados a proposito: el JSON para volver a leerlo desde otro
-    script, el TXT para leerlo con los ojos sin herramientas.
+    Paired on purpose: the JSON to be read back by another script, the TXT to
+    be read with your eyes and no tools.
     """
-    directorio = Path(directorio)
-    directorio.mkdir(parents=True, exist_ok=True)
-    version = siguiente_version(directorio, base)
+    directory = Path(directory)
+    directory.mkdir(parents=True, exist_ok=True)
+    version = next_version(directory, base)
 
-    ruta_json = directorio / f"{base}_v{version}.json"
-    ruta_txt = directorio / f"{base}_v{version}.txt"
+    json_path = directory / f"{base}_v{version}.json"
+    text_path = directory / f"{base}_v{version}.txt"
 
-    contenido = _limpiar_no_finitos({"procedencia": sello(parametros, semilla),
-                                     **datos})
-    ruta_json.write_text(
-        json.dumps(contenido, indent=2, ensure_ascii=False, allow_nan=False,
-                   default=_json_serializable),
+    content = _strip_non_finite({"provenance": stamp(parameters, seed), **data})
+    json_path.write_text(
+        json.dumps(content, indent=2, ensure_ascii=False, allow_nan=False,
+                   default=_json_default),
         encoding="utf-8",
     )
 
-    sello_texto = contenido["procedencia"]
-    cabecera = (
+    prov = content["provenance"]
+    header = (
         f"{base}_v{version}\n"
-        f"generado: {sello_texto['generado_utc']}\n"
-        f"commit:   {sello_texto['git']['commit']} "
-        f"({'limpio' if sello_texto['git']['arbol_limpio'] else 'ARBOL SUCIO'})\n"
+        f"generated: {prov['generated_utc']}\n"
+        f"commit:    {prov['git']['commit']} "
+        f"({'committed inputs' if prov['git']['inputs_clean'] else 'UNCOMMITTED INPUTS'})\n"
         f"{'=' * 78}\n"
     )
-    ruta_txt.write_text(cabecera + texto.rstrip() + "\n", encoding="utf-8")
-    return ruta_json, ruta_txt
+    text_path.write_text(header + text.rstrip() + "\n", encoding="utf-8")
+    return json_path, text_path

@@ -1,8 +1,8 @@
-"""Libreria compartida del pipeline de muon-angle-analysis.
+"""Shared library of the muon-angle-analysis pipeline.
 
-Todo lo que usan dos o mas scripts numerados vive aqui. En particular la
-logica de binning, que en el script original estaba escrita tres veces casi
-literal y obligaba a aplicar cualquier correccion tres veces.
+Everything used by two or more numbered scripts lives here. In particular the
+binning logic, which in the original script was written three times almost
+verbatim and forced any fix to be applied three times over.
 """
 
 from . import binning, io, models, plotting, provenance, rates  # noqa: F401

@@ -1,14 +1,13 @@
-"""Binning temporal, escrito una sola vez.
+"""Time binning, written once.
 
-En el script original esta logica aparecia tres veces casi literal
-(`plot_per_second`, `plot_time_vs_rate_all`, `compute_mean_rate`), de modo que
-cualquier correccion habia que aplicarla tres veces. Peor: la tercera copia
-truncaba la duracion de la corrida a un multiplo entero del tamano de bin, con
-lo que un parametro puramente cosmetico movia la tasa media publicada.
-Comprobado sobre los datos reales: la tasa a 0 grados pasa de 1.8118 1/s con
-bin de 1 s a 1.8194 1/s con bin de 60 s, y el cociente I(90)/I(0) se mueve de
-0.8079 a 0.8148. Aqui el binning solo sirve para dibujar series temporales y no
-interviene en ningun numero fisico.
+In the original script this logic appeared three times almost verbatim
+(`plot_per_second`, `plot_time_vs_rate_all`, `compute_mean_rate`), so any fix
+had to be applied three times. Worse: the third copy truncated the run duration
+to a whole multiple of the bin size, which let a purely cosmetic parameter move
+the published mean rate. Measured on the real data: the rate at 0 degrees goes
+from 1.8118 1/s with 1 s bins to 1.8194 1/s with 60 s bins, and the ratio
+I(90)/I(0) moves from 0.8079 to 0.8148. Here binning only serves to draw time
+series and enters no physical number.
 """
 
 from __future__ import annotations
@@ -16,74 +15,74 @@ from __future__ import annotations
 import numpy as np
 
 
-def bins_completos(
-    tiempos_s: np.ndarray, bin_s: float, inicio_s: float = 0.0,
-    fin_s: float | None = None,
+def complete_bins(
+    times_s: np.ndarray, bin_s: float, start_s: float = 0.0,
+    end_s: float | None = None,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-    """Cuenta eventos en bins de ancho fijo, descartando el bin parcial final.
+    """Count events in fixed-width bins, dropping the final partial bin.
 
-    Devuelve (centros, cuentas, ancho) con ancho constante e igual a `bin_s`.
-    El bin parcial final se descarta porque su tasa aparente esta inflada: un
-    bin de 0.2 s con un evento da 5 1/s. Esto solo afecta a las figuras de
-    serie temporal; las tasas fisicas se calculan en `rates` sobre la ventana
-    completa, sin binning.
+    Returns (centres, counts, widths) with constant width equal to `bin_s`.
+    The final partial bin is dropped because its apparent rate is inflated: a
+    0.2 s bin holding one event reads 5 1/s. This affects only the time-series
+    figures; physical rates are computed in `rates` over the full window,
+    without binning.
     """
     if bin_s <= 0:
-        raise ValueError(f"bin_s debe ser positivo, es {bin_s}")
-    if fin_s is None:
-        fin_s = float(tiempos_s[-1]) if len(tiempos_s) else inicio_s
+        raise ValueError(f"bin_s must be positive, got {bin_s}")
+    if end_s is None:
+        end_s = float(times_s[-1]) if len(times_s) else start_s
 
-    dentro = tiempos_s[(tiempos_s >= inicio_s) & (tiempos_s <= fin_s)]
-    if len(dentro) == 0:
-        vacio = np.array([], dtype=float)
-        return vacio, vacio, vacio
+    inside = times_s[(times_s >= start_s) & (times_s <= end_s)]
+    if len(inside) == 0:
+        empty = np.array([], dtype=float)
+        return empty, empty, empty
 
-    n_bins = int(np.floor((fin_s - inicio_s) / bin_s))
+    n_bins = int(np.floor((end_s - start_s) / bin_s))
     if n_bins < 1:
-        vacio = np.array([], dtype=float)
-        return vacio, vacio, vacio
+        empty = np.array([], dtype=float)
+        return empty, empty, empty
 
-    bordes = inicio_s + np.arange(n_bins + 1) * bin_s
-    cuentas, _ = np.histogram(dentro, bins=bordes)
-    centros = bordes[:-1] + bin_s / 2.0
-    anchos = np.full(n_bins, bin_s, dtype=float)
-    return centros, cuentas.astype(float), anchos
+    edges = start_s + np.arange(n_bins + 1) * bin_s
+    counts, _ = np.histogram(inside, bins=edges)
+    centres = edges[:-1] + bin_s / 2.0
+    widths = np.full(n_bins, bin_s, dtype=float)
+    return centres, counts.astype(float), widths
 
 
-def tasas_por_bin(
-    tiempos_s: np.ndarray, bin_s: float, inicio_s: float = 0.0,
-    fin_s: float | None = None,
+def binned_rates(
+    times_s: np.ndarray, bin_s: float, start_s: float = 0.0,
+    end_s: float | None = None,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-    """Serie temporal de tasa instantanea con su error de Poisson.
+    """Instantaneous rate time series with Poisson errors.
 
-    Devuelve (centros, tasa, error). El error de un bin con cero cuentas se
-    toma como 1/ancho, cota superior de 68 % para una Poisson que observa cero:
-    devolver cero seria afirmar certeza absoluta donde no hay dato.
+    Returns (centres, rate, error). The error of an empty bin is taken as
+    1/width, the 68 % upper bound for a Poisson observing zero: returning zero
+    would claim absolute certainty where there is no measurement.
     """
-    centros, cuentas, anchos = bins_completos(tiempos_s, bin_s, inicio_s, fin_s)
-    if len(centros) == 0:
-        vacio = np.array([], dtype=float)
-        return vacio, vacio, vacio
-    tasas = cuentas / anchos
-    errores = np.where(cuentas > 0, np.sqrt(cuentas), 1.0) / anchos
-    return centros, tasas, errores
+    centres, counts, widths = complete_bins(times_s, bin_s, start_s, end_s)
+    if len(centres) == 0:
+        empty = np.array([], dtype=float)
+        return empty, empty, empty
+    rates = counts / widths
+    errors = np.where(counts > 0, np.sqrt(counts), 1.0) / widths
+    return centres, rates, errors
 
 
-def media_movil(valores: np.ndarray, ventana_bins: int) -> tuple[np.ndarray, np.ndarray]:
-    """Media movil centrada y desviacion tipica local.
+def moving_average(values: np.ndarray, window_bins: int) -> tuple[np.ndarray, np.ndarray]:
+    """Centred moving average and local standard deviation.
 
-    Sustituye al `rolling` de pandas del script original. Los bordes usan la
-    ventana truncada disponible, igual que `min_periods=1`.
+    Replaces the pandas `rolling` of the original script. Edges use the
+    truncated window available, as `min_periods=1` did.
     """
-    ventana_bins = max(int(ventana_bins), 1)
-    n = len(valores)
-    medias = np.empty(n, dtype=float)
-    desviaciones = np.empty(n, dtype=float)
-    medio = ventana_bins // 2
+    window_bins = max(int(window_bins), 1)
+    n = len(values)
+    means = np.empty(n, dtype=float)
+    deviations = np.empty(n, dtype=float)
+    half = window_bins // 2
     for i in range(n):
-        lo = max(0, i - medio)
-        hi = min(n, i + ventana_bins - medio)
-        trozo = valores[lo:hi]
-        medias[i] = float(np.mean(trozo))
-        desviaciones[i] = float(np.std(trozo))
-    return medias, desviaciones
+        lo = max(0, i - half)
+        hi = min(n, i + window_bins - half)
+        chunk = values[lo:hi]
+        means[i] = float(np.mean(chunk))
+        deviations[i] = float(np.std(chunk))
+    return means, deviations
