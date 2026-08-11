@@ -185,7 +185,36 @@ python3 -m venv .venv
 .venv/bin/pip install -r requirements.txt
 ```
 
-Run the pipeline in order, from the repository root:
+### Check the published numbers
+
+To verify that everything in this README reproduces on your machine, this is the
+whole procedure:
+
+```bash
+.venv/bin/python scripts/check_reproducibility.py
+```
+
+It runs the entire pipeline into a temporary directory, compares every numeric
+leaf of its output against the `_v1` products committed here, and removes the
+temporary directory afterwards. It needs no prior step and does not touch
+`results/`. Expect this, in about twenty seconds:
+
+```
+[check] 00_ingest: reproduces exactly
+...
+[check] OK: 8 product(s) compared, all reproduce within rtol=1e-06, atol=1e-12.
+```
+
+Exit codes are `0` if every number reproduces, `1` if any disagrees beyond
+floating-point noise or the repository publishes nothing to compare against, and
+`2` if the pipeline itself failed to run. The three cases are distinguished on
+purpose: "nothing was compared" is not the same claim as "the results do not
+reproduce", and reporting the second when the first is true would be exactly the
+sort of thing this repository exists to correct.
+
+### Run the pipeline yourself
+
+In order, from the repository root:
 
 ```bash
 .venv/bin/python scripts/00_ingest.py
@@ -198,15 +227,8 @@ Run the pipeline in order, from the repository root:
 .venv/bin/python scripts/90_report_figures.py
 ```
 
-Each script writes a new `_vN` alongside the versioned results rather than
-replacing them. To confirm that the published numbers reproduce on your machine:
-
-```bash
-.venv/bin/python scripts/check_reproducibility.py
-```
-
-It compares every numeric leaf of the committed `_v1` products against your
-fresh run and exits non-zero on any disagreement beyond floating-point noise.
+Each script writes a new `_vN` alongside the committed results rather than
+replacing them, so your run and the published one coexist and can be diffed.
 
 Tests:
 

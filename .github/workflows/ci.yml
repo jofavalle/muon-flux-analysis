@@ -67,6 +67,8 @@ jobs:
       # The versioned results were produced on a developer machine. If a fresh
       # run on a clean runner disagrees with them beyond floating-point noise,
       # the published numbers are not reproducible and that has to fail loudly.
+      # This step runs the pipeline again on its own, into a scratch directory,
+      # so it is independent of the step above rather than reusing its output.
       - name: Check the published results are reproducible
         run: python scripts/check_reproducibility.py
 
