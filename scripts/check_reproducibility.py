@@ -6,8 +6,8 @@ Runs the whole pipeline into a scratch directory and compares its output
 against the results committed to the repository, failing if any number differs
 beyond floating-point noise.
 
-Not a pipeline step, hence no number: steps 00 to 06 produce the analysis and
-step 90 presents it, whereas this is a tool that checks the products. It is
+Not a pipeline step, hence no number: steps 00 to 09 produce the analysis and
+step 90 presents the angular part of it, whereas this is a tool that checks the products. It is
 self-contained on purpose: it needs no prior command, and it leaves `results/`
 untouched. A checker that requires setup gets run wrong, and a checker that
 writes into the directory it is checking makes the next check meaningless.
@@ -20,8 +20,9 @@ reproducible and that has to fail loudly rather than sit in the repository
 looking authoritative.
 
 Steps:
-  1. Run steps 00 to 06 and 90 into a temporary directory, reading the same
-     `data/raw` and never touching `results/`.
+  1. Run steps 00 to 09 and 90 into a temporary directory, reading the same
+     `data/raw` (and `data/raw/altitude_2026` for steps 07 and 09) and never
+     touching `results/`.
   2. For each product, walk the committed JSON and the fresh one together and
      compare every numeric leaf.
   3. Ignore the provenance block, which is expected to differ: it carries
@@ -74,6 +75,7 @@ def pipeline_steps(scratch: Path) -> list[tuple[str, list[str]]]:
     fits = str(scratch / "fits")
     figures = str(scratch / "figures")
     data = str(ROOT / "data" / "raw")
+    altitude = str(ROOT / "data" / "raw" / "altitude_2026")
     return [
         ("00_ingest.py", ["--data-dir", data, "--out", tables]),
         ("01_validation.py", ["--data-dir", data, "--out", tables]),
@@ -85,6 +87,12 @@ def pipeline_steps(scratch: Path) -> list[tuple[str, list[str]]]:
                         "--out-figures", figures]),
         ("06_systematics.py", ["--data-dir", data, "--tables", tables,
                                "--fits", fits, "--out-figures", figures]),
+        ("07_detector_health.py", ["--data-dir", data, "--altitude-dir", altitude,
+                                   "--out", tables, "--out-figures", figures]),
+        ("08_angular_reading.py", ["--data-dir", data, "--tables", tables,
+                                   "--out-figures", figures]),
+        ("09_altitude.py", ["--altitude-dir", altitude, "--out", tables,
+                            "--out-figures", figures]),
         ("90_report_figures.py", ["--tables", tables, "--fits", fits,
                                   "--out-figures", figures]),
     ]
@@ -99,6 +107,9 @@ PRODUCTS = [
     ("results/tables", "tables", "04_normalization"),
     ("results/fits", "fits", "05_fits"),
     ("results/tables", "tables", "06_systematics"),
+    ("results/tables", "tables", "07_detector_health"),
+    ("results/tables", "tables", "08_angular_reading"),
+    ("results/tables", "tables", "09_altitude"),
     ("results/tables", "tables", "90_report_figures"),
 ]
 

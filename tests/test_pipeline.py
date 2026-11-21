@@ -1,9 +1,10 @@
 """End-to-end test: the whole pipeline on the real data.
 
-It fits in CI because the data set is 256 kB, which is exactly why the raw data
-are versioned. It checks that the seven scripts run in order, that each writes
-what its docstring promises, and that the numbers the repository publishes come
-out of that run and not from somewhere else.
+It fits in CI because the raw data are versioned: 256 kB for the 2025 angular
+runs and 33 MB for the 2026 altitude campaign, about half a minute of
+pipeline. It checks that the ten analysis scripts run in order, that each
+writes what its docstring promises, and that the numbers the repository
+publishes come out of that run and not from somewhere else.
 """
 
 import json
@@ -25,6 +26,9 @@ PIPELINE = [
     ("04_normalization.py", 0),
     ("05_fits.py", 0),
     ("06_systematics.py", 0),
+    ("07_detector_health.py", 0),
+    ("08_angular_reading.py", 0),
+    ("09_altitude.py", 0),
 ]
 
 
@@ -56,14 +60,15 @@ def read(workdir, subdirectory, base):
 
 
 class TestThePipelineRunsThrough:
-    def test_all_seven_scripts_finish_cleanly(self, full_run):
+    def test_all_ten_scripts_finish_cleanly(self, full_run):
         _, outputs = full_run
         assert len(outputs) == len(PIPELINE)
 
     def test_each_step_writes_its_product(self, full_run):
         workdir, _ = full_run
         for base in ("00_ingest", "01_validation", "02_rates", "03_timeseries",
-                     "04_normalization", "06_systematics"):
+                     "04_normalization", "06_systematics", "07_detector_health",
+                     "08_angular_reading", "09_altitude"):
             assert (workdir / "results" / "tables" / f"{base}_v1.json").is_file()
             assert (workdir / "results" / "tables" / f"{base}_v1.txt").is_file()
         assert (workdir / "results" / "fits" / "05_fits_v1.json").is_file()
@@ -122,6 +127,96 @@ class TestThePublishedNumbers:
         assert bound > systematics["modulated_fraction_bound_statistics_only"], (
             "folding in a systematic cannot tighten the bound"
         )
+
+
+class TestTheDetectorHealthNumbers:
+    """Anchors for step 07: what the fault looks like and what it does not touch."""
+
+    def test_every_fault_episode_is_vetoed(self, full_run):
+        workdir, _ = full_run
+        health = read(workdir, "tables", "07_detector_health")
+        assert len(health["episodes"]) == 10
+        assert all(e["all_minutes_vetoed"] for e in health["episodes"])
+        assert health["unvetoed_episode_minutes"] == 0
+        assert health["deviations"] == []
+
+    def test_cleaning_makes_tacachico_constant(self, full_run):
+        workdir, _ = full_run
+        validation = read(workdir, "tables", "07_detector_health")["validation_tacachico"]
+        assert validation["raw"]["chi2"] / validation["raw"]["dof"] > 1000
+        clean = validation["cuts"]["260"]
+        assert clean["chi2"] / clean["dof"] < 2.0
+        assert clean["excess_fraction"] < 0.02
+
+    def test_no_2025_run_was_taken_in_the_fault_state(self, full_run):
+        """The published reading of the 2025 runs rests on this."""
+        workdir, _ = full_run
+        runs = read(workdir, "tables", "07_detector_health")["runs_2025"]
+        assert len(runs) == 8
+        for angle, d in runs.items():
+            assert d["vetoed_minutes"] == 0 and d["burst_events"] == 0, angle
+
+    def test_sipm_is_derived(self, full_run):
+        workdir, _ = full_run
+        assert read(workdir, "tables", "07_detector_health")["sipm"]["max_spread_mv"] == 0.0
+
+
+class TestTheAngularReadingNumbers:
+    def test_the_record_holds_singles(self, full_run):
+        workdir, _ = full_run
+        singles = read(workdir, "tables", "08_angular_reading")["singles"]
+        assert singles["coincident_flag_fraction"] == 1.0
+        assert singles["max_true_coincidence_fraction"] < 0.2
+
+    def test_cut_zero_reproduces_the_published_profile(self, full_run):
+        workdir, _ = full_run
+        reading = read(workdir, "tables", "08_angular_reading")
+        assert reading["mismatch_with_step_02"] == []
+        assert reading["profiles"]["0"]["relative"]["90"][0] == pytest.approx(0.8056, abs=1e-4)
+
+    def test_the_single_slab_reference(self, full_run):
+        workdir, _ = full_run
+        g = read(workdir, "tables", "08_angular_reading")["slab_response"]["1.0"]
+        assert g[-1] == pytest.approx(2 / 3, abs=1e-5)
+
+
+class TestTheAltitudeNumbers:
+    """The numbers quoted at the International Cosmic Day 2026."""
+
+    def test_counts_and_rates(self, full_run):
+        workdir, _ = full_run
+        sites = read(workdir, "tables", "09_altitude")["sites"]
+        assert sites["tacachico"]["n_events"] == 72_755
+        assert sites["santa_tecla"]["n_events"] == 200_858
+        assert sites["tacachico"]["live_rate_hz"] == pytest.approx(1.587, abs=5e-4)
+        assert sites["santa_tecla"]["live_rate_hz"] == pytest.approx(1.917, abs=5e-4)
+
+    def test_ratio_and_its_errors(self, full_run):
+        workdir, _ = full_run
+        presented = read(workdir, "tables", "09_altitude")["presented"]
+        assert presented["ratio"] == pytest.approx(0.828, abs=5e-4)
+        assert presented["ratio_stat"] == pytest.approx(0.004, abs=5e-4)
+        assert presented["ratio_sys_hours"] == pytest.approx(0.038, abs=5e-4)
+
+    def test_height_difference_and_gamma_min(self, full_run):
+        workdir, _ = full_run
+        presented = read(workdir, "tables", "09_altitude")["presented"]
+        assert presented["delta_h_m"] == pytest.approx(603, abs=0.5)
+        assert presented["delta_h_unc_m"] == pytest.approx(28, abs=0.5)
+        assert presented["gamma_min"] == pytest.approx(4.8, abs=0.05)
+        assert presented["gamma_min_95_lower"] == pytest.approx(3.2, abs=0.05)
+        assert presented["prediction_classical"] == pytest.approx(0.40, abs=5e-3)
+        assert presented["prediction_relativistic"] == pytest.approx(0.976, abs=5e-4)
+
+    def test_internal_checks_pass(self, full_run):
+        workdir, _ = full_run
+        assert all(c["ok"] for c in read(workdir, "tables", "09_altitude")["checks"])
+
+    def test_cleaning_shrinks_the_hour_systematic(self, full_run):
+        workdir, _ = full_run
+        altitude = read(workdir, "tables", "09_altitude")
+        assert (altitude["cleaned"]["ratio_sys_hours"]
+                < altitude["presented"]["ratio_sys_hours"] / 3)
 
 
 class TestReproducibility:

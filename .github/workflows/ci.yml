@@ -1,9 +1,10 @@
 name: CI
 
-# The data set is 256 kB and versioned with the repository, so CI runs the
-# entire pipeline on the real data rather than on fixtures. A pipeline that is
-# only ever exercised by unit tests is one that breaks the first time somebody
-# runs it end to end.
+# The raw data are versioned with the repository (256 kB for the 2025 angular
+# runs, 33 MB for the 2026 altitude campaign), so CI runs the entire pipeline
+# on the real data rather than on fixtures. A pipeline that is only ever
+# exercised by unit tests is one that breaks the first time somebody runs it
+# end to end.
 
 on:
   push:
@@ -62,6 +63,9 @@ jobs:
           python scripts/04_normalization.py
           python scripts/05_fits.py
           python scripts/06_systematics.py
+          python scripts/07_detector_health.py
+          python scripts/08_angular_reading.py
+          python scripts/09_altitude.py
           python scripts/90_report_figures.py
 
       # The versioned results were produced on a developer machine. If a fresh
