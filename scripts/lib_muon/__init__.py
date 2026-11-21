@@ -1,4 +1,4 @@
-"""Shared library of the muon-angle-analysis pipeline.
+"""Shared library of the muon-flux-analysis pipeline.
 
 Everything used by two or more numbered scripts lives here. In particular the
 binning logic, which in the original script was written three times almost

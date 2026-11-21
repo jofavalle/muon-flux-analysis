@@ -1,4 +1,4 @@
-"""Smoke test for muon-angle-analysis.
+"""Smoke test for muon-flux-analysis.
 
 Checks the only thing checkable without the pipeline: that the raw files are
 where the pipeline expects them and are not empty. The real checks live in the

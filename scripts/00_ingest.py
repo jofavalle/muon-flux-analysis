@@ -3,7 +3,7 @@
 00_ingest.py
 
 Reading and inventory of the eight raw CosmicWatch runs, first step of the
-muon-angle-analysis pipeline.
+muon-flux-analysis pipeline.
 
 For each file in data/raw:
   1. Line-by-line parsing, counting and keeping the text of every line that is
