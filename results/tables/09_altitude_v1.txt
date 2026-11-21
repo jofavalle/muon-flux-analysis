@@ -1,0 +1,54 @@
+09_altitude_v1
+generated: 2026-11-21T19:23:58+00:00
+commit:    1af68342a5c25c3f24c2f704c73655471ac7a7c5 (committed inputs)
+==============================================================================
+(a) AS PRESENTED AT THE INTERNATIONAL COSMIC DAY 2026
+    Tacachico: hours 26 to 40 of acquisition 1. Santa Tecla: whole file. All triggers.
+                                 Tacachico   Santa Tecla
+  events N                           72755        200858
+  window (s)                         50400        115507
+  dead fraction                      0.090         0.093
+  raw rate (1/s)                     1.444         1.739
+  live rate (1/s)               1.587+-0.006    1.917+-0.004
+  counts/min mean, var          86.6,  98.3   104.3, 104.6
+  dispersion D (sigmas)          1.14 (2.8)     1.00 (0.1)
+  Poisson chi2 / dof, p        44.8/41, 0.32   34.5/51, 0.96
+  mean pressure (hPa)                978.2         912.9
+  case temperature (C)                38.0          35.1
+  altitude from P (m)             307+-21        911+-26
+
+  R = 0.828 +- 0.004 (stat) +- 0.038 (hours of Tacachico) = 0.828 +- 0.039
+  Tacachico hour-to-hour excess over Poisson 4.7 %, correlation with the case temperature 0.86 [0.60, 0.95]; Santa Tecla 0.6 %.
+  R in hours 26-36: 0.805 +- 0.004 (36.9 C); hours 36-40: 0.884 +- 0.006 (40.4 C).
+  Delta h = 603 +- 28 m (column temperature 10 m, weather 26 m); Delta X = 66.6 g/cm2.
+  Predictions: classical 0.40 +- 0.02, relativistic (gamma = 38) 0.976 +- 0.001.
+  The classical prediction sits 10 sigma from R.
+  gamma_min = 4.8 +- 1.2; one-sided 95 % lower bound 3.2.
+  All of this assumes every trigger is a muon. It is not:
+  a 25 cm2 slab expects 0.32 to 0.42 muons/s, 20 to 26 % of Tacachico's triggers and 16 to 22 % of Santa Tecla's. With the rest independent of altitude,
+  the classical prediction becomes 0.87 to 0.90, 1.9 sigma above R.
+  Ratios above ADC2 thresholds (stat, sys of the hours, total):
+    ADC2 >= 1000: 0.56 +- 0.004 +- 0.012 = +- 0.013
+    ADC2 >= 2000: 0.48 +- 0.005 +- 0.011 = +- 0.012
+  These data cannot decide between the two predictions.
+
+(b) AFTER CLEANING: state veto and ADC2 >= 260 at both sites
+  Tacachico: 2142 of 2452 minutes kept, 159982 events, 1.3679 +- 0.0034 /s
+  Santa Tecla: 1918 of 1924 minutes kept, 188521 events, 1.8060 +- 0.0042 /s
+  Tacachico hours used 36, hour-to-hour excess 1.2 %, correlation with T +0.19.
+  R_clean = 0.757 +- 0.003 (stat) +- 0.009 (hours) = +- 0.009
+  Same cut, ICD window only: 0.767 +- 0.004.
+  gamma_min = 3.3 +- 0.2 with the same caveat on composition.
+  Cleaning removes the fault and lets the whole acquisition in, which shrinks
+  the hour systematic; it does not turn triggers into muons, and a fixed
+  ADC2 cut does not mean the same energy at 38 C as at 35 C.
+
+INTERNAL CHECKS
+  [OK] 72 755 events in hours 26 to 40 (fault report 6.1)
+  [OK] Santa Tecla: one acquisition
+  [OK] Santa Tecla counts per minute compatible with Poisson (|z| < 3)
+  [OK] hour systematic with threshold 0 equals that of all triggers
+  [OK] gamma_min inverted reproduces the ratio
+  [OK] classical ratio = exp(-dh / c tau)
+  [OK] hypsometric dh matches the standard atmosphere to 1 m
+  [OK] cleaned Tacachico keeps most of its first acquisition

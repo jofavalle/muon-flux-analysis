@@ -1,0 +1,88 @@
+07_detector_health_v1
+generated: 2026-11-21T19:23:48+00:00
+commit:    1af68342a5c25c3f24c2f704c73655471ac7a7c5 (committed inputs)
+==============================================================================
+INTEGRITY OF THE 2026 FILES
+  tacachico: 389530 rows in 3 acquisition(s) [382709, 4330, 2491], 2 rejected, glued comments at [382717], sha256 0e6d19ef771f...
+  santa-tecla.txt: 200859 rows in 1 acquisition(s) [200859], 1 rejected, glued comments at [], sha256 f255bfeb496e...
+
+SiPM[mV] AGAINST (ADC1, ADC2)
+  502159 of 588328 events share an (ADC1, ADC2) pair with another; the largest SiPM spread inside a pair is 0.00 mV.
+  SiPM is a function of the two channels and carries no information of its own.
+
+STATES (Tacachico acquisition 1 unless named)
+  state                              N   rate/s  coinc  ADC1  ADC2  SiPM  A1>A2 dt<=10ms
+  santa_tecla_all               200859    1.739  0.000   107  1096   0.8  0.000    0.008
+  tacachico_window_h26_40        72755    1.444  0.000   144   633   0.8  0.000    0.007
+  tacachico_burst_min70_73       24027  133.483  1.000   339   230   1.4  0.969    0.977
+  tacachico_episode_minutes     165663   27.610  0.677   190   217   0.8  0.242    0.338
+  tacachico_vetoed_minutes      198574   10.642  0.607   188   219   0.8  0.202    0.285
+  tacachico_kept_minutes        184135    1.432  0.056   148   627   0.8  0.000    0.007
+
+EPISODES (minutes above 5 times the median count): 10
+      minutes      N  rate/s coinc A1>A2  ADC1  ADC2 dt med  vetoed
+     66-67      2467    20.6  1.00  0.37   210   254      7  all
+     69-74     37689   104.7  1.00  0.93   335   228      7  all
+    166-167      896     7.5  1.00  0.00   172   216     90  all
+    169-190    19358    14.7  1.00  0.00   180   214     44  all
+    198-230    60907    30.8  0.85  0.00   187   214     23  all
+    319-319      509     8.5  0.00  0.00   167   213     86  all
+    689-697    14385    26.6  0.00  0.28   209   216     20  all
+    701-701      463     7.7  0.00  0.00   188   217     86  all
+    740-742     1358     7.5  0.00  0.00   192   216     92  all
+   1512-1532   27631    21.9  0.00  0.01   190   214     30  all
+  Events in episodes: 43.3% of acquisition 1.
+  The state veto (pedestal > 170 or more than 1% of ADC1 > ADC2 or more than 60 events in [200, 260), 1 guard minute) removes 311 of 2454 minutes (12.7%); episode minutes it misses: 0.
+
+COINCIDENT FLAG
+  Acquisition 1: 34.2% of events flagged. Per hour, hours 0 to 4: 100.0%, 100.0%, 100.0%, 86.6%, 0.7%; from hour 4 on, 0.046%.
+  Santa Tecla 0.03%; 2025 runs 100%. With no second detector connected the flag went up and down on its own: it is not a coincidence.
+
+LIVE RATE PER ADC2 BAND AGAINST THE PEDESTAL (median of 10 min bins, 1/s)
+  pedestal   bins  total   [200,260)   [260,400)   [400,700)  [700,1200) [1200,2500) [2500,4095) [4095,4096)
+  90-110        6  1.475       0.127       0.225       0.396       0.233       0.347       0.102       0.026
+  110-130      63  1.520       0.148       0.249       0.387       0.238       0.341       0.121       0.033
+  130-150      53  1.551       0.165       0.260       0.388       0.242       0.324       0.117       0.033
+  150-170      94  1.636       0.260       0.261       0.388       0.242       0.317       0.117       0.035
+  170-185      17  2.080       0.654       0.282       0.394       0.239       0.334       0.120       0.033
+  185-200       8 25.553      23.335       1.156       0.371       0.237       0.296       0.110       0.032
+  200-400       3 30.724      27.841       3.721       0.752       0.276       0.311       0.116       0.019
+  Sta Tecla   192  1.920       0.110       0.222       0.390       0.287       0.571       0.257       0.075
+  2025 all         1.819       0.116       0.217       0.360       0.258       0.477       0.283       0.108
+  The slow fault adds events just above the trigger threshold: up to a
+  pedestal of 200 the bands from ADC2 = 400 up do not move. In the burst
+  state (pedestal above 200) the [400, 700) band rises as well.
+
+VALIDATION ON TACACHICO: HOURLY LIVE RATE AGAINST A CONSTANT
+  raw (no veto, no cut): 39 hours, chi2 143736.0 / 38
+  cut        hours   rate/s      chi2/dof         p  excess  corr(T)   window  outside
+  ADC2>=0       36   1.5739    509.6/35     1.4e-85    5.6%    +0.25   1.5858   1.5741
+  ADC2>=260     36   1.3692     55.5/35       0.015    1.2%    +0.19   1.3839   1.3593
+  ADC2>=400     36   1.1105     70.3/35     0.00037    1.7%    +0.12   1.1274   1.0997
+  ADC2>=1000    36   0.5510     91.3/35     6.4e-07    3.0%    +0.08   0.5625   0.5450
+  Santa Tecla, same procedure (control):
+  ADC2>=0       31   1.9160     36.4/30        0.19    0.6%    -0.62
+  ADC2>=260     31   1.8041     39.3/30        0.12    0.7%    -0.66
+  Santa Tecla minutes vetoed: 6 of 1926.
+  Larger cuts drift with the gain, which falls as the case warms up: a fixed
+  ADC2 cut is a different energy threshold at a different temperature.
+
+THE 2025 ANGULAR RUNS
+    run     N   ped     range  veto  A1>A2  R[200,260) dt<=10ms Poisson triplets   KS p  D(10s)   p_D
+      0   677    84   82-88       0      0       0.112    0.012   0.018        0   0.76    1.04  0.40
+      5   590    97   90-99       0      0       0.113    0.008   0.016        0   0.65    0.75  0.86
+     15   494    97   91-100      0      0       0.093    0.002   0.015        0   0.77    0.83  0.73
+     25   766    95   88-98       0      0       0.134    0.010   0.017        0   0.46    1.09  0.31
+     35   544    88   74-91       0      0       0.140    0.004   0.017        0   0.56    0.70  0.89
+     45   712    84   82-88       0      0       0.109    0.006   0.016        0   0.34    1.18  0.20
+     90   447    80   70-84       0      0       0.108    0.007   0.015        0   0.77    1.09  0.34
+    360   530    82   69-85       0      0       0.119    0.009   0.017        0   0.68    0.84  0.72
+  No 2025 run shows either signature: they were not taken in the fault state.
+
+FIRMWARE FINGERPRINT
+  data set       ADC2 min ADC2 max  on 5.6+k*41 ms
+  tacachico           201     4095           0.892
+  santa_tecla         201     4095           0.974
+  runs_2025           201     4095           0.964
+  Same trigger threshold and dead-time pattern: same firmware and settings.
+  Whether it is the same physical unit is not recorded.

@@ -1,0 +1,553 @@
+{
+  "provenance": {
+    "generated_utc": "2026-11-21T19:23:58+00:00",
+    "git": {
+      "commit": "1af68342a5c25c3f24c2f704c73655471ac7a7c5",
+      "branch": "main",
+      "inputs_clean": true
+    },
+    "seed": 20260810,
+    "python": "3.11.2",
+    "numpy": "2.4.6",
+    "platform": "Linux-6.1.0-56-amd64-x86_64-with-glibc2.36",
+    "parameters": {
+      "altitude_dir": "data/raw/altitude_2026",
+      "window_s": [
+        93600.0,
+        144000.0
+      ],
+      "adc2_clean": 260
+    }
+  },
+  "files": {
+    "tacachico": {
+      "path": "data/raw/altitude_2026/tacachico",
+      "sha256": "0e6d19ef771f526ea3496246dad9a70a8a8e8f7bafb217a77c8e89dfe9a67d3e",
+      "total_lines": 389560,
+      "comment_lines": 28,
+      "data_rows": 389530,
+      "rejected_lines": 2,
+      "rejected_texts": [
+        [
+          1,
+          "118  | Hexa address:  0x76"
+        ],
+        [
+          385764,
+          "7\t0\tCOSMIC"
+        ]
+      ],
+      "glued_comment_lines": [
+        382717
+      ],
+      "columns_swapped": true,
+      "sensor_startup_rows": 143,
+      "acquisitions": [
+        {
+          "index": 0,
+          "rows": 382709,
+          "first_event": 1,
+          "last_event": 382709,
+          "first_time_s": 1.724,
+          "last_time_s": 147224.054,
+          "first_line": 9,
+          "counter_jumps": []
+        },
+        {
+          "index": 1,
+          "rows": 4330,
+          "first_event": 1,
+          "last_event": 4455,
+          "first_time_s": 0.001,
+          "last_time_s": 36.973,
+          "first_line": 382728,
+          "counter_jumps": [
+            [
+              3036,
+              3162
+            ]
+          ]
+        },
+        {
+          "index": 2,
+          "rows": 2491,
+          "first_event": 1,
+          "last_event": 2491,
+          "first_time_s": 0.002,
+          "last_time_s": 227.793,
+          "first_line": 387070,
+          "counter_jumps": []
+        }
+      ]
+    },
+    "santa_tecla": {
+      "path": "data/raw/altitude_2026/santa-tecla.txt",
+      "sha256": "f255bfeb496e12f30fb2f2cc7b93cb78909ec5e07dfa91c1eac7fc413e35019c",
+      "total_lines": 200860,
+      "comment_lines": 0,
+      "data_rows": 200859,
+      "rejected_lines": 1,
+      "rejected_texts": [
+        [
+          2,
+          "485\t293919\t84\t1717\t1.0\t91419.2\t30.2\t88303\t0\tCOS486\t295117\t115\t2920\t1.6\t91414.5\t3"
+        ]
+      ],
+      "glued_comment_lines": [],
+      "columns_swapped": true,
+      "sensor_startup_rows": 0,
+      "acquisitions": [
+        {
+          "index": 0,
+          "rows": 200859,
+          "first_event": 84,
+          "last_event": 201344,
+          "first_time_s": 292.724,
+          "last_time_s": 115799.69,
+          "first_line": 1,
+          "counter_jumps": [
+            [
+              84,
+              487
+            ]
+          ]
+        }
+      ]
+    }
+  },
+  "sites": {
+    "tacachico": {
+      "window_s": [
+        93600.0,
+        144000.0
+      ],
+      "n_events": 72755,
+      "duration_s": 50400.0,
+      "dead_fraction": 0.09013434523809526,
+      "raw_rate_hz": 1.4435515873015874,
+      "raw_sigma_hz": 0.005351812456863954,
+      "live_rate_hz": 1.5865546520484262,
+      "live_sigma_hz": 0.005881980959336712,
+      "minutes": 840,
+      "counts_per_minute_mean": 86.61309523809524,
+      "counts_per_minute_var": 98.34714654634202,
+      "dispersion": 1.1354766421404343,
+      "dispersion_sigmas": 2.774791825937406,
+      "dispersion_unc": 0.04882407425092739,
+      "poisson_chi2": 44.76495882781899,
+      "poisson_dof": 41,
+      "poisson_p": 0.31673620986094064,
+      "poisson_groups": 43,
+      "pressure_mean_pa": 97818.97068792522,
+      "pressure_range_pa": [
+        97490.2,
+        98033.5
+      ],
+      "temperature_c": {
+        "min": 35.4,
+        "max": 40.6,
+        "mean": 37.963382585389326,
+        "sd": 1.9164303658991089
+      },
+      "coincident_fraction": 0.00026115043639612397,
+      "small_pulse_rate_hz": 0.7573724090480914,
+      "small_pulse_sigma_hz": 0.0040639732044421666,
+      "muon_fraction_range": [
+        0.1985434284241633,
+        0.2626235825716446
+      ]
+    },
+    "santa_tecla": {
+      "window_s": [
+        292.724,
+        115799.69
+      ],
+      "n_events": 200858,
+      "duration_s": 115506.966,
+      "dead_fraction": 0.09291341458142013,
+      "raw_rate_hz": 1.7389254255020428,
+      "raw_sigma_hz": 0.00388004167681765,
+      "live_rate_hz": 1.917044583676217,
+      "live_sigma_hz": 0.004277476636948814,
+      "minutes": 1925,
+      "counts_per_minute_mean": 104.33766233766234,
+      "counts_per_minute_var": 104.60110160110159,
+      "dispersion": 1.002524872203737,
+      "dispersion_sigmas": 0.07831175147247002,
+      "dispersion_unc": 0.03224129401095805,
+      "poisson_chi2": 34.485076529893185,
+      "poisson_dof": 51,
+      "poisson_p": 0.9630334733614121,
+      "poisson_groups": 53,
+      "pressure_mean_pa": 91286.46701600136,
+      "pressure_range_pa": [
+        91097.5,
+        91441.8
+      ],
+      "temperature_c": {
+        "min": 30.1,
+        "max": 37.3,
+        "mean": 35.070464208545346,
+        "sd": 1.3006003792133383
+      },
+      "coincident_fraction": 0.00031365442252735763,
+      "small_pulse_rate_hz": 0.628643412502453,
+      "small_pulse_sigma_hz": 0.0024494790201918374,
+      "muon_fraction_range": [
+        0.16431542734177879,
+        0.21734844886478674
+      ]
+    }
+  },
+  "presented": {
+    "ratio": 0.8276044623886485,
+    "ratio_stat": 0.0035810896889169885,
+    "ratio_sys_hours": 0.038497186871067145,
+    "ratio_total": 0.038663388371247706,
+    "hour_excess_tacachico_fraction": 0.04651640804347019,
+    "hour_excess_tacachico_fraction_unc": 0.0099339343166415,
+    "hour_excess_santa_tecla_fraction": 0.005506839584864362,
+    "hour_excess_santa_tecla_fraction_unc": 0.0044538208224667725,
+    "rate_temperature_correlation": 0.8575324382647258,
+    "rate_temperature_correlation_ci95": [
+      0.5998947323730408,
+      0.9540369250414586
+    ],
+    "halves": [
+      {
+        "hours": [
+          26,
+          36
+        ],
+        "ratio": 0.8050592015417084,
+        "sigma": 0.00400553699743466,
+        "mean_temperature_c": 36.90953228517749
+      },
+      {
+        "hours": [
+          36,
+          40
+        ],
+        "ratio": 0.8840177126511238,
+        "sigma": 0.0062536981546921335,
+        "mean_temperature_c": 40.36482199188824
+      }
+    ],
+    "pressure_difference_pa": 6532.503671923856,
+    "pressure_difference_unc_pa": 282.842712474619,
+    "column_density_difference_g_cm2": 66.61299905598605,
+    "column_density_g_cm2": [
+      997.4759034729008,
+      930.8629044169147
+    ],
+    "delta_h_m": 603.1844935198493,
+    "delta_h_unc_m": 28.011911513221783,
+    "delta_h_unc_temperature_m": 10.115453522050188,
+    "delta_h_unc_weather_m": 26.121730162219528,
+    "altitude_hypsometric_m": [
+      307.3229135915057,
+      910.5074071113544
+    ],
+    "altitude_hypsometric_unc_m": [
+      20.604548742900437,
+      26.27041307693956
+    ],
+    "altitude_standard_atmosphere_m": [
+      296.0254691142458,
+      871.3013853606518
+    ],
+    "altitude_published_m": {
+      "Tacachico": [
+        305.0,
+        306.0
+      ],
+      "Santa Tecla": [
+        920.0,
+        920.0
+      ]
+    },
+    "decay_length_at_rest_m": 658.6383641485438,
+    "gamma_typical": 37.85786011824496,
+    "prediction_classical": 0.4001942266613795,
+    "prediction_classical_unc": 0.01702027375801712,
+    "prediction_relativistic": 0.9760996234015054,
+    "prediction_relativistic_unc": 0.0010965635481918602,
+    "classical_distance_sigmas": 10.117678716985727,
+    "gamma_min": 4.839898360844575,
+    "gamma_min_unc": 1.2158960042513323,
+    "gamma_min_95_lower": 3.201537399269773,
+    "attenuation_length_g_cm2": 352.04005797087007,
+    "muons_expected_hz": {
+      "pdg": 0.4166666666666667,
+      "axani": 0.315
+    },
+    "classical_with_background_range": [
+      0.8696331455447069,
+      0.9014426580317985
+    ],
+    "classical_with_background_sigmas": 1.9097704250375596,
+    "max_muon_fraction_classical": 0.2874189367197464,
+    "max_muon_fraction_classical_unc": 0.06445984698686832,
+    "thresholds": [
+      {
+        "adc2_min": 1000,
+        "ratio": 0.5581723542056769,
+        "stat": 0.0038786596513656194,
+        "sys": 0.0121315948965631,
+        "total": 0.012736545662990713
+      },
+      {
+        "adc2_min": 2000,
+        "ratio": 0.48456023521998787,
+        "stat": 0.005066022682470482,
+        "sys": 0.010783033752343196,
+        "total": 0.011913790443157794
+      }
+    ]
+  },
+  "cleaned": {
+    "adc2_min": 260,
+    "tacachico": {
+      "minutes_kept": 2142,
+      "minutes_spanned": 2452,
+      "n_events": 159982,
+      "live_time_s": 116955.162043,
+      "rate_hz": 1.3678917390681793,
+      "sigma_hz": 0.003419921723678133
+    },
+    "santa_tecla": {
+      "minutes_kept": 1918,
+      "minutes_spanned": 1924,
+      "n_events": 188521,
+      "live_time_s": 104386.971017,
+      "rate_hz": 1.8059820891756528,
+      "sigma_hz": 0.004159427621318677
+    },
+    "tacachico_hours_used": 36,
+    "hour_excess_tacachico_fraction": 0.011845524052379576,
+    "rate_temperature_correlation": 0.18644348191425414,
+    "ratio": 0.7574226495748684,
+    "ratio_stat": 0.0025746969591849216,
+    "ratio_sys_hours": 0.008972068213356171,
+    "ratio_total": 0.009334188366256184,
+    "ratio_window_only_same_cut": 0.7665893517704494,
+    "ratio_window_only_same_cut_stat": 0.0035162731866179684,
+    "classical_distance_sigmas": 18.402671881419995,
+    "gamma_min": 3.296233527613303,
+    "gamma_min_unc": 0.2116823246274369,
+    "gamma_min_95_lower": 2.96577818770661
+  },
+  "threshold_scan": {
+    "adc2_min": [
+      200,
+      250,
+      300,
+      350,
+      400,
+      450,
+      500,
+      550,
+      600,
+      650,
+      700,
+      750,
+      800,
+      850,
+      900,
+      950,
+      1000,
+      1050,
+      1100,
+      1150,
+      1200,
+      1250,
+      1300,
+      1350,
+      1400,
+      1450,
+      1500,
+      1550,
+      1600,
+      1650,
+      1700,
+      1750,
+      1800,
+      1850,
+      1900,
+      1950,
+      2000,
+      2050,
+      2100,
+      2150,
+      2200,
+      2250,
+      2300,
+      2350,
+      2400,
+      2450,
+      2500,
+      2550,
+      2600,
+      2650,
+      2700,
+      2750,
+      2800,
+      2850,
+      2900,
+      2950,
+      3000
+    ],
+    "ratio": [
+      0.8276044623886485,
+      0.7717029954132689,
+      0.7494752817859652,
+      0.7304430571493686,
+      0.7117722381518746,
+      0.6930882793245432,
+      0.6780445783622033,
+      0.6590727219327449,
+      0.643574580303222,
+      0.6280739852105462,
+      0.6141012109771357,
+      0.6013418786022383,
+      0.5902614979488392,
+      0.580956110702559,
+      0.5727937340363943,
+      0.564667227957355,
+      0.5581723542056769,
+      0.551889201411907,
+      0.5469904771752501,
+      0.5454692146209268,
+      0.5422296798981844,
+      0.5378314741490119,
+      0.5338798069001313,
+      0.5293969537178086,
+      0.5249472980335277,
+      0.5196002837224015,
+      0.514710077597266,
+      0.5114601698277011,
+      0.5085112197569783,
+      0.505284440567097,
+      0.5022894463532056,
+      0.49739078806538695,
+      0.4949252839336088,
+      0.4923920700069478,
+      0.48889119727367825,
+      0.4875287499953887,
+      0.48456023521998787,
+      0.48330228400110403,
+      0.48070349399139684,
+      0.4809597182866272,
+      0.4786123604025001,
+      0.47536172604370064,
+      0.4713065295888516,
+      0.469106497041668,
+      0.46783697456595386,
+      0.4655162689909459,
+      0.4665602767164177,
+      0.4656027098707045,
+      0.4646648125573111,
+      0.46471747066547014,
+      0.46431522524707697,
+      0.4637842003049898,
+      0.46244953208602413,
+      0.4633588876209991,
+      0.4647124034472357,
+      0.4665943924556643,
+      0.46539849971472064
+    ],
+    "stat": [
+      0.0035810896889169885,
+      0.003513669589579092,
+      0.0035329175282382934,
+      0.0035594556497451067,
+      0.003584818272655291,
+      0.003614599196787934,
+      0.003660066353392172,
+      0.0037068594300418895,
+      0.0037364493478488966,
+      0.0037545628757340026,
+      0.0037716405556317795,
+      0.003785448794730152,
+      0.0037993310739882257,
+      0.0038165286613143046,
+      0.0038367798038209467,
+      0.0038557839471848663,
+      0.0038786596513656194,
+      0.003901656682724215,
+      0.003931779190748969,
+      0.0039770709209472985,
+      0.00401795567354675,
+      0.0040578803857792825,
+      0.004106368433774974,
+      0.004156897975885945,
+      0.004208670913430794,
+      0.00425492781502531,
+      0.004305381446263191,
+      0.004386182694689979,
+      0.004454939057272671,
+      0.004526579687519099,
+      0.0045967415245624504,
+      0.0046613002407827194,
+      0.004741975473981768,
+      0.004821493507012403,
+      0.004896531143591887,
+      0.004987271867583318,
+      0.005066022682470482,
+      0.005155031522307951,
+      0.005240600018074688,
+      0.005354130191717681,
+      0.005442026939716338,
+      0.005531104390167339,
+      0.005615908598303978,
+      0.005718533490472587,
+      0.005829267403201204,
+      0.005932853201514633,
+      0.006061223931411946,
+      0.006185366601837358,
+      0.006327284284330612,
+      0.006464468001702419,
+      0.006597237112984178,
+      0.006740021922908063,
+      0.006873375310231687,
+      0.007047134689290496,
+      0.007226828472743735,
+      0.00741676889609508,
+      0.007583017676328972
+    ]
+  },
+  "checks": [
+    {
+      "name": "72 755 events in hours 26 to 40 (fault report 6.1)",
+      "ok": true
+    },
+    {
+      "name": "Santa Tecla: one acquisition",
+      "ok": true
+    },
+    {
+      "name": "Santa Tecla counts per minute compatible with Poisson (|z| < 3)",
+      "ok": true
+    },
+    {
+      "name": "hour systematic with threshold 0 equals that of all triggers",
+      "ok": true
+    },
+    {
+      "name": "gamma_min inverted reproduces the ratio",
+      "ok": true
+    },
+    {
+      "name": "classical ratio = exp(-dh / c tau)",
+      "ok": true
+    },
+    {
+      "name": "hypsometric dh matches the standard atmosphere to 1 m",
+      "ok": true
+    },
+    {
+      "name": "cleaned Tacachico keeps most of its first acquisition",
+      "ok": true
+    }
+  ]
+}
