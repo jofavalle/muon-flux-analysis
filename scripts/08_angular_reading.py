@@ -12,17 +12,24 @@ single detector should have seen, and finds the flat profile is what one gets.
 Steps:
   1. The record holds singles, not coincidences. Two 5 x 5 cm slabs stacked
      in coincidence see at most 0.32 muons/s (Axani et al., 2025); the runs
-     record about 2 events/s with Coincident = 1 on all of them, the same
-     stuck flag the 2026 detector showed with nothing connected.
+     record about 2 events/s with Coincident = 1 on all of them. The 2026
+     detector, of the same firmware, raised the same flag for three hours
+     without a partner (according to the group that took the data).
+     Whatever the flag means, these are the triggers of one detector.
   2. The reference for a single slab (methodology 10): g(alpha), the rate of
      a tilted box relative to the horizontal one under a cos^2 flux. For the
      assumed 5 x 5 x 1 cm slab, g(90) = 2/3 even with a pure muon sample.
   3. Two components: a fraction f of the triggers at 0 degrees are muons and
      follow g; the rest does not depend on orientation. Expected f from the
-     known flux, and the I(90)/I(0) that implies.
+     known flux, collected over the effective area of the same box (its
+     edges add a fifth to the 25 cm2 face at 0 degrees), and the I(90)/I(0)
+     that implies.
   4. The profile again above ADC2 cuts 0, 260, 1000, 2500 and 4095
-     (saturation). Larger pulses are richer in muons, so f should rise. f is
-     fitted at each cut with its interval.
+     (saturation). g counts every crossing, which holds when nearly every
+     muon passes the cut: f is fitted only at cuts 0 and 260. Above larger
+     cuts the efficiency depends on the path length, which grows with the
+     tilt for near-vertical muons (1 cm / cos), so the profiles are shown
+     and not fitted (methodology 10.5).
 
 Exact outputs:
   - results/tables/08_angular_reading_vN.json and .txt
@@ -51,6 +58,7 @@ PHYSICAL = [0, 5, 15, 25, 35, 45, 90]
 REFERENCE_ANGLE = 0
 CONTROL_ANGLE = 360
 CUTS = (0, 260, 1000, 2500, 4095)
+FIT_CUTS = (0, 260)               # cuts that keep nearly every muon crossing
 THICKNESSES_CM = (0.5, 1.0, 2.0)
 
 
@@ -87,7 +95,12 @@ def main() -> int:
     g_ref = np.array(g["1.0"])
 
     # 3. Expected muon fraction at 0 degrees and what it implies.
-    f_expected = [alt.FLUX_AXANI * alt.AREA_CM2 / 60.0 / r0, alt.FLUX_PDG * alt.AREA_CM2 / 60.0 / r0]
+    # The flux references are per cm2 of a horizontal plate; the box of the
+    # reference curve collects more at 0 degrees, through its edges.
+    edge_factor = (geometry.slab_rate(0.0, geometry.DEFAULT_DIMS_CM)
+                   / geometry.slab_rate(0.0, (5.0, 5.0, 1e-9)))
+    f_expected = [flux * alt.AREA_CM2 * edge_factor / 60.0 / r0
+                  for flux in (alt.FLUX_AXANI, alt.FLUX_PDG)]
     i90_expected = [float(geometry.two_component(g_ref[-1], f)) for f in f_expected]
 
     # 4. Profiles above each cut.
@@ -110,8 +123,11 @@ def main() -> int:
         w = 1.0 / ee**2
         mean = np.sum(w * rr) / w.sum()
         chi2_const = float(np.sum(w * (rr - mean) ** 2))
-        fit = geometry.fit_muon_fraction(rr, ee, g_ref)
-        fit["p_value"] = float(stats.chi2.sf(fit["chi2"], fit["dof"]))
+        if cut in FIT_CUTS:
+            fit = geometry.fit_muon_fraction(rr, ee, g_ref)
+            fit["p_value"] = float(stats.chi2.sf(fit["chi2"], fit["dof"]))
+        else:
+            fit = None
         profiles[str(cut)] = {
             "counts": {str(a): rows[a][2] for a in rows},
             "rate_hz": {str(a): rows[a][0] for a in rows},
@@ -137,8 +153,9 @@ def main() -> int:
         f"  Rate at 0 degrees: {r0:.3f} /s. Two 5 x 5 cm slabs stacked in coincidence see at",
         f"  most {coincidence_max:.2f} muons/s, {100 * coincidence_max / r0:.0f} % of that. Yet "
         f"{100 * singles['coincident_flag_fraction']:.0f} % of events carry Coincident = 1.",
-        "  The flag is stuck, as on the 2026 detector with nothing connected (step 07): these",
-        "  are the triggers of one detector, and cos^2 is the wrong reference for them.",
+        "  The 2026 detector of the same firmware raised the same flag for three hours",
+        "  without a partner (group's report; step 07). Whatever the flag means, these are",
+        "  the triggers of one detector, and cos^2 is the wrong reference for them.",
         "",
         "2. WHAT ONE SLAB SEES UNDER A cos^2 FLUX, RELATIVE TO HORIZONTAL",
         f"  {'angle':>6}" + "".join(f"{a:>8}" for a in PHYSICAL),
@@ -151,6 +168,7 @@ def main() -> int:
         "  still face the sky: even pure muons fall only to 2/3, never to 0.",
         "",
         "3. TWO COMPONENTS: f g(alpha) + 1 - f",
+        f"  The box collects {edge_factor:.2f} times the muons of its 25 cm2 face at 0 degrees.",
         f"  Known flux: {100 * f_expected[0]:.0f} to {100 * f_expected[1]:.0f} % of the "
         f"triggers at 0 degrees are muons, so I(90)/I(0) should be {i90_expected[1]:.3f} to "
         f"{i90_expected[0]:.3f}.",
@@ -166,18 +184,21 @@ def main() -> int:
     for cut, prof in profiles.items():
         rel = prof["relative"]
         fit = prof["fit"]
+        fitted = (f"   {fit['muon_fraction']:.2f} [{fit['interval'][0]:.2f}, "
+                  f"{fit['interval'][1]:.2f}]{fit['chi2']:>8.1f}/{fit['dof']}"
+                  if fit else "   not fitted (path length)")
         lines.append(
             f"  {cut:>6}{prof['counts']['0']:>6}"
             + "".join(f"{rel[str(a)][0]:>8.3f}" for a in PHYSICAL)
             + f"{rel['360'][0]:>8.3f}{prof['chi2_constant']:>8.1f}/{len(PHYSICAL) - 1}"
-            + f"   {fit['muon_fraction']:.2f} [{fit['interval'][0]:.2f}, {fit['interval'][1]:.2f}]"
-            + f"{fit['chi2']:>8.1f}/{fit['dof']}"
+            + fitted
         )
     lines += [
-        "  f rises with the cut, as it must if large pulses are richer in muons, but the",
-        "  intervals overlap: with about 600 events per run the trend is suggestive, not",
-        "  significant. The dips at 5 and 15 degrees fit no model; they are of the size of",
-        "  the run-to-run spread the 360 degree control measures.",
+        "  At cuts 0 and 260 the fitted f overlaps the range the known flux gives. Above",
+        "  larger cuts the profile is not a muon fraction: a tilted slab gives near-vertical",
+        "  muons a longer path, so more of them pass a high cut, and the saturated pulses",
+        "  rise above 1 at intermediate angles. The dips at 5 and 15 degrees fit no model;",
+        "  they are of the size of the run-to-run spread the 360 degree control measures.",
         "",
         "READING. The 2025 runs were taken with a healthy detector that recorded singles.",
         "Their flat profile is what one slab with a muon fraction of a few tens of percent",
@@ -191,6 +212,7 @@ def main() -> int:
     json_path, text_path = provenance.write_product(
         out, "08_angular_reading",
         data={"singles": singles, "slab_response": {"angles_deg": PHYSICAL, **g},
+              "edge_factor_at_0deg": edge_factor,
               "expected_muon_fraction": f_expected, "comparison": comparison,
               "profiles": profiles, "mismatch_with_step_02": mismatch},
         text=text,

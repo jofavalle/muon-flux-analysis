@@ -347,8 +347,9 @@ def main() -> int:
         f"{gamma:.0f}) {r_rel:.3f} +- {r_rel_unc:.3f}.",
         f"  The classical prediction sits {nsig_clas:.0f} sigma from R.",
         f"  gamma_min = {gmin:.1f} +- {gmin_unc:.1f}; one-sided 95 % lower bound {gmin95:.1f}.",
-        "  All of this assumes every trigger is a muon. It is not:",
-        f"  a 25 cm2 slab expects {mu_axani:.2f} to {mu_pdg:.2f} muons/s, "
+        "  All of this assumes every trigger is a muon. It is not. Counting the 25 cm2 face",
+        "  only, as presented (the edges of a 1 cm slab add a fifth, step 08),",
+        f"  the slab expects {mu_axani:.2f} to {mu_pdg:.2f} muons/s, "
         f"{100 * t_['muon_fraction_range'][0]:.0f} to {100 * t_['muon_fraction_range'][1]:.0f} % "
         f"of Tacachico's triggers and {100 * s_['muon_fraction_range'][0]:.0f} to "
         f"{100 * s_['muon_fraction_range'][1]:.0f} % of Santa Tecla's. With the rest "

@@ -16,17 +16,20 @@ module does so with two observables only, because there are only two:
 
 The fault shows two signatures (docs/detector_fault.md):
 
-1. **Burst**: ADC1 > ADC2 in nearly every event, events every 6 to 10 ms. A
-   real pulse never reads more on the low-gain channel than on the high-gain
-   one; in clean data this happens in 0 to 0.1 % of events.
+1. **Burst**: ADC1 > ADC2 in nearly every event, events every 6 to 10 ms.
+   Full in one episode of Tacachico (minutes 69 to 74), partial in two more.
+   A real pulse never reads more on the low-gain channel than on the
+   high-gain one; in clean data this happens in 0 to 0.1 % of events.
 2. **Slow fault**: the pedestal rises (from about 100-150 to 170-200) and the
-   extra events pile up just above the ADC2 trigger threshold. Above
-   ADC2 = 400 the rate does not change at all while the total rate grows by
-   a factor of four.
+   extra events pile up just above the ADC2 trigger threshold. Between the
+   lowest and the highest pedestal class below 200 the band just above the
+   threshold grows by a factor of about 180 and the total rate by 17, while
+   the bands from ADC2 = 400 up change by -15 % to +27 %.
 
 Cleaning is therefore a veto on the state of each minute (high pedestal,
-burst, or a pile-up just above threshold) plus an amplitude cut. **The thresholds below were chosen by looking at the Tacachico file
-itself**, so the validation on that file is not blind (methodology 9.6).
+burst, or a pile-up just above threshold) plus an amplitude cut. **The
+thresholds below were chosen by looking at the Tacachico file itself**, so
+the validation on that file is not blind (methodology 9.6).
 """
 
 from __future__ import annotations
@@ -56,6 +59,9 @@ NEAR_THRESHOLD = (200, 260)
 # ADC2 bands for the rate-versus-pedestal table. The last one is saturation.
 BANDS = ((200, 260), (260, 400), (400, 700), (700, 1200), (1200, 2500),
          (2500, 4095), (4095, 4096))
+# Monte Carlo of the KS test with an estimated scale (Lilliefors): samples and seed.
+KS_MC_SAMPLES = 999
+KS_SEED = 20260810
 # Dead time pattern of the firmware: a fixed part plus whole display refreshes.
 DEADTIME_BASE_S = 5.6e-3
 DEADTIME_STEP_S = 41.0e-3
@@ -113,18 +119,21 @@ def minute_state(time_s: np.ndarray, adc1: np.ndarray, adc2: np.ndarray,
                        vetoed)
 
 
-def episodes(counts: np.ndarray, factor: float = 5.0) -> list[tuple[int, int]]:
+def episodes(counts: np.ndarray, factor: float = 5.0,
+             first_minute: int = 0) -> list[tuple[int, int]]:
     """Runs of consecutive minutes with more than `factor` times the median count.
 
-    This is the criterion the fault report used to list its ten episodes. It
-    only sees the fault when the rate jumps; the state veto also sees it when
-    the rate creeps up.
+    `counts` holds one entry per minute starting at `first_minute`
+    (`MinuteState.minute[0]`); the runs are returned as absolute minutes,
+    floor(t / 60), first and last included. This is the criterion the fault
+    report used to list its ten episodes. It only sees the fault when the rate
+    jumps; the state veto also sees it when the rate creeps up.
     """
     high = np.flatnonzero(counts > factor * np.median(counts))
     if len(high) == 0:
         return []
     groups = np.split(high, np.flatnonzero(np.diff(high) > 1) + 1)
-    return [(int(g[0]), int(g[-1])) for g in groups]
+    return [(int(g[0]) + first_minute, int(g[-1]) + first_minute) for g in groups]
 
 
 def sipm_is_derived(adc1: np.ndarray, adc2: np.ndarray, sipm: np.ndarray) -> dict:
@@ -228,19 +237,35 @@ def run_diagnostics(time_s: np.ndarray, adc1: np.ndarray, adc2: np.ndarray,
                     deadtime_s: np.ndarray) -> dict:
     """Every fault signature evaluated on one short run.
 
-    Time intervals are tested against an exponential only above 60 ms, out of
-    the region shaped by the dead time. Counts in 10 s bins are tested for the
-    Poisson index of dispersion D = var / mean, which a burst would push far
-    above 1.
+    The gap between two events is the dead time the detector recorded for the
+    second one plus a live waiting time. For a Poisson source the live waiting
+    times are exponential at the live rate, so:
+
+    - the fraction of gaps of 10 ms or less is compared with its approximate
+      expectation, 1 - exp(-rate_live (10 ms - 5.6 ms)), for the base dead
+      time that follows every event; a detector without dead time would
+      double it. On clean Santa Tecla data, in runs of 600 events, the
+      formula gives 0.0085 against 0.0070 observed;
+    - the live waiting times are tested against an exponential whose scale is
+      estimated from them, so the KS p value is computed by Monte Carlo
+      (Lilliefors), with a fixed seed so that it reproduces.
+
+    Counts in 10 s bins are tested for the Poisson index of dispersion
+    D = var / mean, which a burst would push far above 1.
     """
     state = minute_state(time_s, adc1, adc2)
     pedestals = state.pedestal[~np.isnan(state.pedestal) & (state.n_events > 5)]
     duration = time_s[-1] - time_s[0]
     live = duration - deadtime_s[1:].sum()
     dt = np.diff(time_s)
-    rate = len(dt) / duration
-    tail = dt[dt > 0.060] - 0.060
-    ks_p = float(stats.kstest(tail, "expon", args=(0.0, tail.mean())).pvalue)
+    dead = deadtime_s[1:]
+    rate_live = len(dt) / live
+    waiting = dt - dead
+    usable = waiting[waiting >= 0.0]
+    ks = stats.goodness_of_fit(stats.expon, usable, known_params={"loc": 0.0},
+                               statistic="ks", n_mc_samples=KS_MC_SAMPLES,
+                               rng=np.random.default_rng(KS_SEED))
+    ks_p = float(ks.pvalue)
     counts = np.bincount(np.floor((time_s - time_s[0]) / 10.0).astype(np.int64))[:-1]
     d = counts.var(ddof=1) / counts.mean()
     d_p = float(stats.chi2.sf(d * (len(counts) - 1), len(counts) - 1))
@@ -255,9 +280,11 @@ def run_diagnostics(time_s: np.ndarray, adc1: np.ndarray, adc2: np.ndarray,
         "burst_events": int((adc1 > adc2).sum()),
         "near_threshold_rate_hz": float(near.sum() / live),
         "fraction_dt_below_10ms": float(np.mean(dt <= 0.010)),
-        "poisson_fraction_dt_below_10ms": float(1.0 - np.exp(-rate * 0.010)),
+        "expected_fraction_dt_below_10ms": float(
+            1.0 - np.exp(-rate_live * (0.010 - DEADTIME_BASE_S))),
         "close_triplets_below_20ms": int(np.sum((dt[:-1] < 0.020) & (dt[1:] < 0.020))),
-        "ks_p_exponential_tail": ks_p,
+        "negative_live_waits": int((waiting < 0.0).sum()),
+        "ks_p_live_waits": ks_p,
         "dispersion_10s": float(d),
         "dispersion_10s_p": d_p,
     }

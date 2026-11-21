@@ -135,22 +135,23 @@ def main() -> int:
 
     # 3. State of every minute of Tacachico.
     state = health.minute_state(tac.time_s, tac.adc1, tac.adc2)
-    episode_list = health.episodes(state.n_events)
+    m0 = int(state.minute[0])
+    episode_list = health.episodes(state.n_events, first_minute=m0)
     episode_rows = []
     for first, last in episode_list:
         seg = tac.window(60.0 * first, 60.0 * (last + 1))
         row = {"first_minute": first, "last_minute": last}
         row.update(signature(seg, 60.0 * (last - first + 1)))
-        row["all_minutes_vetoed"] = bool(state.vetoed[first - state.minute[0]:last - state.minute[0] + 1].all())
+        row["all_minutes_vetoed"] = bool(state.vetoed[first - m0:last - m0 + 1].all())
         episode_rows.append(row)
     in_episode = np.zeros(len(state.minute), bool)
     for first, last in episode_list:
-        in_episode[first - state.minute[0]:last - state.minute[0] + 1] = True
+        in_episode[first - m0:last - m0 + 1] = True
     unvetoed_episode_minutes = int((in_episode & ~state.vetoed).sum())
     if unvetoed_episode_minutes:
         problems.append(f"{unvetoed_episode_minutes} episode minutes escape the state veto")
     event_vetoed = state.event_vetoed(tac.time_s)
-    episode_events = in_episode[np.floor(tac.time_s / 60).astype(int) - state.minute[0]]
+    episode_events = in_episode[np.floor(tac.time_s / 60).astype(int) - m0]
 
     st_state = health.minute_state(st.time_s, st.adc1, st.adc2)
     states = {
@@ -167,7 +168,19 @@ def main() -> int:
 
     # The Coincident flag: when it changes in acquisition 1.
     hour_of = np.floor(tac.time_s / 3600).astype(int)
+
+    def preamble_messages(path: Path) -> int:
+        with open(path, "r", encoding="ascii", errors="replace") as handle:
+            return sum("Coincidence detector found" in line for line in handle)
+
     coincident = {
+        "preamble_messages": {
+            **{name: preamble_messages(altitude_dir / name) for name in DOCUMENTED},
+            "runs_2025": sum(preamble_messages(Path(args.data_dir) / f"{a:03d}deg")
+                             for a in runs),
+        },
+        "flagged_fraction_per_acquisition_tacachico": [
+            float(a.coincident.mean()) for a in files["tacachico"].acquisitions],
         "acquisition1_fraction": float(tac.coincident.mean()),
         "flagged_fraction_hours_0_to_4": [float(tac.coincident[hour_of == h].mean())
                                           for h in range(5)],
@@ -210,11 +223,14 @@ def main() -> int:
         hourly[cut] = h
         test = health.constant_test(h["rate"], h["error"])
         in_window = (h["hour"] >= WINDOW_S[0] / 3600) & (h["hour"] < WINDOW_S[1] / 3600)
+        rw, ro = h["rate"][in_window], h["rate"][~in_window]
+        spread = np.sqrt(rw.var(ddof=1) / len(rw) + ro.var(ddof=1) / len(ro))
         test.update({
             "hours": int(len(h["hour"])),
             "correlation_with_temperature": float(np.corrcoef(h["rate"], h["temperature"])[0, 1]),
-            "window_mean_hz": float(h["rate"][in_window].mean()),
-            "outside_window_mean_hz": float(h["rate"][~in_window].mean()),
+            "window_mean_hz": float(rw.mean()),
+            "outside_window_mean_hz": float(ro.mean()),
+            "window_minus_outside_sigmas": float((rw.mean() - ro.mean()) / spread),
         })
         validation["cuts"][str(cut)] = test
     st_first, st_last = int(np.ceil(st.time_s[0] / 3600)), int(st.time_s[-1] // 3600)
@@ -288,8 +304,17 @@ def main() -> int:
               + ", ".join(f"{x:.1%}" for x in coincident["flagged_fraction_hours_0_to_4"])
               + f"; from hour 4 on, {coincident['flagged_fraction_from_hour_4']:.3%}.",
               f"  Santa Tecla {coincident['santa_tecla_fraction']:.2%}; 2025 runs "
-              f"{coincident['runs_2025_fraction']:.0%}. With no second detector connected "
-              "the flag went up and down on its own: it is not a coincidence.",
+              f"{coincident['runs_2025_fraction']:.0%}.",
+              "  Every preamble in the files prints 'Coincidence detector found.' ("
+              + ", ".join(f"{k}: {v}" for k, v in coincident["preamble_messages"].items())
+              + "; santa-tecla.txt starts",
+              "  after its preamble), yet acquisitions 2 and 3",
+              "  of Tacachico print it and flag "
+              + " and ".join(f"{x:.2%}" for x in coincident[
+                  "flagged_fraction_per_acquisition_tacachico"][1:])
+              + " of their events. Neither the message nor the flag",
+              "  follows a partner. The group's report says no second detector was connected",
+              "  in 2026; the flag changed on its own and is not a coincidence.",
               "", "LIVE RATE PER ADC2 BAND AGAINST THE PEDESTAL (median of 10 min bins, 1/s)",
               f"  {'pedestal':<10}{'bins':>5}{'total':>7}" + "".join(f"{b:>12}" for b in band_names)]
     for row in by_pedestal:
@@ -300,9 +325,16 @@ def main() -> int:
                  + "".join(f"{v:>12.3f}" for v in bands_st))
     lines.append(f"  {'2025 all':<10}{'':>5}{len(adc2_2025) / live_2025:>7.3f}"
                  + "".join(f"{v:>12.3f}" for v in bands_2025))
-    lines += ["  The slow fault adds events just above the trigger threshold: up to a",
-              "  pedestal of 200 the bands from ADC2 = 400 up do not move. In the burst",
-              "  state (pedestal above 200) the [400, 700) band rises as well.",
+    low_cls, high_cls = by_pedestal[0], [r for r in by_pedestal if r["pedestal"][1] <= 200][-1]
+    near_factor = high_cls["bands_hz"][0] / low_cls["bands_hz"][0]
+    upper = [high_cls["bands_hz"][j] / low_cls["bands_hz"][j] - 1
+             for j, (lo, _) in enumerate(health.BANDS) if lo >= 400]
+    lines += [f"  From pedestal class {low_cls['pedestal']} to {high_cls['pedestal']} the band"
+              f" just above threshold grows by a factor of {near_factor:.0f}, the bands",
+              f"  from ADC2 = 400 up change by {100 * min(upper):+.0f} % to {100 * max(upper):+.0f} %."
+              " The slow fault adds its events just above",
+              "  the trigger threshold. In the burst state (pedestal above 200) the [400, 700)",
+              "  band rises as well.",
               "", "VALIDATION ON TACACHICO: HOURLY LIVE RATE AGAINST A CONSTANT",
               f"  raw (no veto, no cut): {validation['raw']['hours']} hours, chi2 "
               f"{validation['raw']['chi2']:.1f} / {validation['raw']['dof']}",
@@ -313,7 +345,14 @@ def main() -> int:
                      f"{v['chi2']:>9.1f}/{v['dof']:<4}{v['p_value']:>10.2g}"
                      f"{v['excess_fraction']:>8.1%}{v['correlation_with_temperature']:>+9.2f}"
                      f"{v['window_mean_hz']:>9.4f}{v['outside_window_mean_hz']:>9.4f}")
-    lines += ["  Santa Tecla, same procedure (control):"]
+    v260 = validation["cuts"][str(health.ADC2_CLEAN)]
+    lines += [f"  With ADC2 >= {health.ADC2_CLEAN} the ICD window and the hours outside it still differ by "
+              f"{100 * (v260['window_mean_hz'] / v260['outside_window_mean_hz'] - 1):.1f} %",
+              f"  ({v260['window_minus_outside_sigmas']:.1f} sigma from the hourly spread): the cleaned"
+              " rate is close to constant, not",
+              f"  constant. The residual excess of {100 * v260['excess_fraction']:.1f} % is the systematic"
+              " the cleaned ratio carries (step 09).",
+              "  Santa Tecla, same procedure (control):"]
     for cut, v in control.items():
         lines.append(f"  ADC2>={cut:<4}{v['hours']:>6}{v['mean']:>9.4f}"
                      f"{v['chi2']:>9.1f}/{v['dof']:<4}{v['p_value']:>10.2g}"
@@ -323,15 +362,15 @@ def main() -> int:
               "  ADC2 cut is a different energy threshold at a different temperature.",
               "", "THE 2025 ANGULAR RUNS",
               f"  {'run':>5}{'N':>6}{'ped':>6}{'range':>10}{'veto':>6}{'A1>A2':>7}"
-              f"{'R[200,260)':>12}{'dt<=10ms':>9}{'Poisson':>8}{'triplets':>9}"
+              f"{'R[200,260)':>12}{'dt<=10ms':>9}{'expect':>8}{'triplets':>9}"
               f"{'KS p':>7}{'D(10s)':>8}{'p_D':>6}"]
     for angle, d in diagnostics_2025.items():
         lines.append(f"  {angle:>5}{d['n_events']:>6}{d['pedestal_median']:>6.0f}"
                      f"{d['pedestal_min']:>5.0f}-{d['pedestal_max']:<4.0f}"
                      f"{d['vetoed_minutes']:>6}{d['burst_events']:>7}"
                      f"{d['near_threshold_rate_hz']:>12.3f}{d['fraction_dt_below_10ms']:>9.3f}"
-                     f"{d['poisson_fraction_dt_below_10ms']:>8.3f}"
-                     f"{d['close_triplets_below_20ms']:>9}{d['ks_p_exponential_tail']:>7.2f}"
+                     f"{d['expected_fraction_dt_below_10ms']:>8.3f}"
+                     f"{d['close_triplets_below_20ms']:>9}{d['ks_p_live_waits']:>7.2f}"
                      f"{d['dispersion_10s']:>8.2f}{d['dispersion_10s_p']:>6.2f}")
     lines += ["  No 2025 run shows either signature: they were not taken in the fault state.",
               "", "FIRMWARE FINGERPRINT",
@@ -438,7 +477,7 @@ def main() -> int:
     ax.axvspan(WINDOW_S[0] / 3600, WINDOW_S[1] / 3600, color=plotting.COLOUR_BAND, alpha=0.15,
                label="window used at the ICD (hours 26 to 40)")
     ax.set(yscale="log", xlabel="hour of acquisition 1", ylabel="live rate (1/s)",
-           title="Tacachico: cleaning recovers the whole acquisition")
+           title="Tacachico: after cleaning, within about 1 % of constant")
     ax.legend(fontsize=8)
     plotting.save(fig, figures, "07_tacachico_cleaning")
 

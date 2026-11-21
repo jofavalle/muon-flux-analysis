@@ -68,6 +68,15 @@ class TestRules:
         counts = np.array([90, 90, 900, 950, 90, 90, 800, 90])
         assert health.episodes(counts) == [(2, 3), (6, 6)]
 
+    def test_episodes_are_absolute_minutes_when_the_data_start_late(self):
+        """A file whose first event falls in minute 5 and whose episode is
+        minute 8: the episode must come back as minute 8, not 3."""
+        t, a1, a2 = minutes_of([90, 90, 90, 900, 90], [110] * 5, [800] * 5, start_minute=5)
+        state = health.minute_state(t, a1, a2)
+        found = health.episodes(state.n_events, first_minute=int(state.minute[0]))
+        assert found == [(8, 8)]
+        assert state.n_events[found[0][0] - state.minute[0]] == 900
+
     def test_sipm_as_a_function_of_the_pair_has_zero_spread(self):
         rng = np.random.default_rng(1)
         a1 = rng.integers(80, 120, 5000)
@@ -102,9 +111,9 @@ class TestOnTheRealData:
         assert derived["events_in_repeated_pairs"] > 300_000
 
     def test_ten_episodes_all_under_the_veto(self, tacachico_state):
-        found = health.episodes(tacachico_state.n_events)
-        assert len(found) == 10
         offset = int(tacachico_state.minute[0])
+        found = health.episodes(tacachico_state.n_events, first_minute=offset)
+        assert len(found) == 10
         for first, last in found:
             assert tacachico_state.vetoed[first - offset:last - offset + 1].all(), (first, last)
 
