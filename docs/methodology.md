@@ -12,6 +12,9 @@ Cite as `methodology.md 3.2` in comments and commit messages.
 
 **1.1** The measurement consists of eight runs of a CosmicWatch desktop muon
 detector, one per nominal angle, described in [dataset.md](dataset.md).
+*Added 2026-11-21:* sections 1 to 8 govern that 2025 angular campaign. The
+2026 altitude campaign (dataset.md section 7) is governed by sections 9 and
+11, and the second reading of the angular runs by section 10.
 
 **1.2** The observable is the number of inter-event intervals in a run, `N-1`,
 modelled as Poisson with mean `R * T_live`. Not `N`: for `N` events observed in
@@ -77,6 +80,11 @@ the three hypotheses of this analysis predict at 90 degrees: wide geometric
 acceptance, an accidental component, and an undocumented angular convention
 (see [dataset.md](dataset.md) section 4). **These data cannot separate the
 three**, and no result may be phrased as though they could.
+*Added 2026-11-21:* the 2026 campaign showed what the second hypothesis
+really is. The record holds the singles of one detector, most of which are
+not muons, and one slab does not fall to zero at 90 degrees even for muons
+(section 10). `B` is therefore dominated by composition and geometry; the
+statement that these data alone cannot split it stands.
 
 ---
 
@@ -209,8 +217,115 @@ never as "nothing was seen".
 cannot be supported is given. In particular, no geometric acceptance correction
 is attempted, because the detector geometry is not recorded; see
 [dataset.md](dataset.md) section 4.
+*Added 2026-11-21:* section 10 uses an assumed geometry to build a reference
+curve, not to correct the data. The rule stands: no rate is corrected for an
+acceptance that was never measured.
 
 **8.4** Where this analysis contradicts the repository's earlier published
 result, the contradiction is stated explicitly along with the cause. The earlier
 result, `n = 0.006`, was double-precision rounding, and saying so is more useful
 to a reader than quietly replacing the number.
+
+---
+
+## 9. Detector state (2026 campaign)
+
+**9.1** `SiPM[mV]` is an exact function of the pair `(ADC1, ADC2)`: in the
+three data sets, every event that shares a pair with another shares its SiPM
+value. It carries no information of its own and is never used to classify.
+
+**9.2** The **pedestal** of a minute is the median ADC1 of its events with
+`ADC2 < 1500`. Below that value of ADC2 the low-gain channel barely leaves its
+baseline, so the pedestal measures the state of the electronics rather than
+the pulses. It is the state monitor.
+
+**9.3** A **burst** event reads `ADC1 > ADC2`. A real pulse never reads more on
+the low-gain channel than on the high-gain one; clean data do so in 0 to 0.1 %
+of events, the burst of minutes 70 to 73 of Tacachico in 97 %.
+
+**9.4** A minute is **vetoed** if its pedestal exceeds 170, more than 1 % of
+its events are burst events, or more than 60 of its events have ADC2 in
+`[200, 260)`; one guard minute on each side of a vetoed minute is vetoed too.
+The third criterion catches a slow-fault episode whose pedestal stays just
+under 170 (Tacachico, minute 319).
+
+**9.5** After the veto, events are kept with `ADC2 >= 260`. The slow fault
+adds events just above the trigger threshold (201) and, up to a pedestal of
+200, nowhere above ADC2 = 400.
+
+**9.6** The thresholds of 9.4 and 9.5 were chosen **by looking at the Tacachico
+file**, the one that has the fault. Its validation (step 07) is therefore not
+blind, and is reported as a consistency check, not as a measured efficiency.
+The conclusion that the 2025 runs were not taken in the fault state does not
+depend on the thresholds: no 2025 event reads `ADC1 > ADC2`, and the 2025
+near-threshold rate equals that of the cleanest 2026 state.
+
+**9.7** The `Coincident` flag is not a coincidence and is never a selection.
+In the 2026 Tacachico file, with no second detector connected, it reads 1 on
+every event of the first three hours, on 87 % of the fourth and on 0.05 % of
+the events after that; in the 2025 runs it reads 1 on every event, at a rate
+no coincidence can reach.
+
+---
+
+## 10. The reference for a single detector
+
+**10.1** The rate of one scintillator slab tilted by `alpha` is the flux
+`I(theta) ~ cos^2(theta)` integrated over the upper hemisphere against the area
+the slab presents to each direction. The ratio to the horizontal slab is
+`g(alpha)`. `cos^2(theta)` itself is the reference only for a narrow telescope
+of two detectors in coincidence.
+
+**10.2** The slab is **assumed** to be 5 x 5 x 1 cm, the CosmicWatch design;
+it was never measured (dataset.md 4.1). Then `g(90) = 2/3` exactly. The step
+reports `g` also for 0.5 cm, 2 cm and a thin plate so the dependence on the
+assumption is visible.
+
+**10.3** The triggers are modelled as a fraction `f` of muons, which follow
+`g`, plus a remainder independent of orientation: `I(alpha)/I(0) = f g + 1 - f`.
+The remainder (radioactivity, electronic noise, the soft component) is taken
+as isotropic over the upper hemisphere, for which a plate sees the same rate
+at any tilt. This is an assumption, not a measurement.
+
+**10.4** `f` is fitted at each ADC2 cut with the scale profiled out in closed
+form and `f` scanned on a grid of step 0.001 in `[0, 1]`; the interval is where
+chi-square rises by 1. No optimiser and no starting point, so the result is the
+same on every machine.
+
+---
+
+## 11. Rate against altitude (2026 campaign)
+
+**11.1** Tacachico uses the window `[93 600, 144 000)` s of its first
+acquisition, hours 26 to 40, the reference window of the fault report, for
+the analysis as presented. Santa Tecla uses its whole file,
+`[t_first, t_last)`.
+
+**11.2** The rate of a site is `N / (T - sum DeadTime)` over its window, with
+`sigma = sqrt(N) / T_live`. DeadTime is the dead time accumulated since the
+previous event.
+
+**11.3** The hour-to-hour spread of a site's live rate beyond Poisson,
+`sqrt(var - <sigma^2>)`, is a systematic of the ratio (rule 5.1 applied to
+hours). In Tacachico it follows the case temperature.
+
+**11.4** `Delta h` comes from the two mean pressures through the hypsometric
+equation with an assumed air column of 25 +- 5 C, plus 200 Pa of weather
+between the two days on each site. The absolute accuracy of the sensor cancels
+in the difference but not in each altitude from sea level.
+
+**11.5** Predictions are `exp(-Delta h / (gamma c tau))` with `gamma = 1`
+(classical) and `gamma = E/m` for `E = 4 GeV` (relativistic, decay only); both
+carry the error of `Delta h`.
+
+**11.6** `gamma_min` is the Lorentz factor for which that survival equals the
+measured ratio. Its one-sided 95 % bound is taken in log scale, because
+`gamma_min` grows steeply as the ratio approaches 1. Every one of these numbers
+assumes that each trigger is a muon, which a single detector does not satisfy;
+the report says so next to them.
+
+**11.7** The cleaned analysis (state veto and `ADC2 >= 260` at both sites,
+whole acquisition) is reported next to the presented one and **never combined
+with it**. A fixed ADC2 cut is a different energy threshold at a different case
+temperature, because the gain of the SiPM falls as it warms up, so the cleaned
+ratio is a different observable, not a correction.
