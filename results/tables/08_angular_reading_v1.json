@@ -1,8 +1,8 @@
 {
   "provenance": {
-    "generated_utc": "2026-11-21T19:23:55+00:00",
+    "generated_utc": "2026-11-21T19:47:16+00:00",
     "git": {
-      "commit": "1af68342a5c25c3f24c2f704c73655471ac7a7c5",
+      "commit": "43e03079e5c80f512351daae231d854372837a4b",
       "branch": "main",
       "inputs_clean": true
     },
@@ -73,9 +73,10 @@
       0.499999036371755
     ]
   },
+  "edge_factor_at_0deg": 1.1999996142287022,
   "expected_muon_fraction": [
-    0.15762679355769232,
-    0.2085010496794872
+    0.18915209146133805,
+    0.2502011791816641
   ],
   "comparison": {
     "measured_i90_over_i0": 0.8055711786422444,
@@ -83,11 +84,11 @@
     "repeatability_systematic": 0.07451422359986848,
     "combined_error": 0.07757701447031934,
     "expected_range": [
-      0.9474576173167213,
-      0.9304994938051867
+      0.9369491610494085,
+      0.9165994193775246
     ],
-    "sigmas_from_nearest_expected_statistical": 2.542150815807313,
-    "sigmas_from_nearest_expected_combined": 1.6103779710514565
+    "sigmas_from_nearest_expected_statistical": 2.2592999224772057,
+    "sigmas_from_nearest_expected_combined": 1.4312002271982154
   },
   "profiles": {
     "0": {
@@ -315,17 +316,7 @@
       },
       "chi2_constant": 20.995346608133048,
       "p_constant": 0.0018381510666372004,
-      "fit": {
-        "muon_fraction": 0.47500000000000003,
-        "interval": [
-          0.299,
-          0.645
-        ],
-        "scale": 0.9857181338812852,
-        "chi2": 14.19507936704525,
-        "dof": 5,
-        "p_value": 0.01441659648719863
-      }
+      "fit": null
     },
     "2500": {
       "counts": {
@@ -394,17 +385,7 @@
       },
       "chi2_constant": 10.009825676123565,
       "p_constant": 0.12423884833718353,
-      "fit": {
-        "muon_fraction": 0.617,
-        "interval": [
-          0.34900000000000003,
-          0.871
-        ],
-        "scale": 0.4129296605214252,
-        "chi2": 5.083537777340436,
-        "dof": 5,
-        "p_value": 0.4057705013951122
-      }
+      "fit": null
     },
     "4095": {
       "counts": {
@@ -473,17 +454,7 @@
       },
       "chi2_constant": 4.862302317786167,
       "p_constant": 0.5615914983882497,
-      "fit": {
-        "muon_fraction": 0.51,
-        "interval": [
-          0.0,
-          0.987
-        ],
-        "scale": 0.11346627756341257,
-        "chi2": 3.9266381707956652,
-        "dof": 5,
-        "p_value": 0.5600259628403745
-      }
+      "fit": null
     }
   },
   "mismatch_with_step_02": []

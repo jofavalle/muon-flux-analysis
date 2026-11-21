@@ -1,8 +1,8 @@
 {
   "provenance": {
-    "generated_utc": "2026-11-21T19:23:48+00:00",
+    "generated_utc": "2026-11-21T19:47:09+00:00",
     "git": {
-      "commit": "1af68342a5c25c3f24c2f704c73655471ac7a7c5",
+      "commit": "43e03079e5c80f512351daae231d854372837a4b",
       "branch": "main",
       "inputs_clean": true
     },
@@ -342,6 +342,16 @@
   "minutes": 2454,
   "unvetoed_episode_minutes": 0,
   "coincident_flag": {
+    "preamble_messages": {
+      "tacachico": 3,
+      "santa-tecla.txt": 0,
+      "runs_2025": 8
+    },
+    "flagged_fraction_per_acquisition_tacachico": [
+      0.34153103271676394,
+      0.00023094688221709007,
+      0.0004014452027298274
+    ],
     "acquisition1_fraction": 0.34153103271676394,
     "flagged_fraction_hours_0_to_4": [
       1.0,
@@ -521,7 +531,8 @@
         "hours": 36,
         "correlation_with_temperature": 0.24998052050160682,
         "window_mean_hz": 1.5858072452822456,
-        "outside_window_mean_hz": 1.5740766159442872
+        "outside_window_mean_hz": 1.5740766159442872,
+        "window_minus_outside_sigmas": 0.3973327362961102
       },
       "260": {
         "mean": 1.3691898004172756,
@@ -532,7 +543,8 @@
         "hours": 36,
         "correlation_with_temperature": 0.18644348191425414,
         "window_mean_hz": 1.3839297221346896,
-        "outside_window_mean_hz": 1.359266584664235
+        "outside_window_mean_hz": 1.359266584664235,
+        "window_minus_outside_sigmas": 3.2907872994002596
       },
       "400": {
         "mean": 1.110470260564032,
@@ -543,7 +555,8 @@
         "hours": 36,
         "correlation_with_temperature": 0.11916174327607455,
         "window_mean_hz": 1.1273685430923746,
-        "outside_window_mean_hz": 1.09967699228445
+        "outside_window_mean_hz": 1.09967699228445,
+        "window_minus_outside_sigmas": 3.5641803401359744
       },
       "1000": {
         "mean": 0.5510192105075945,
@@ -554,7 +567,8 @@
         "hours": 36,
         "correlation_with_temperature": 0.07549689729092737,
         "window_mean_hz": 0.5624564645105935,
-        "outside_window_mean_hz": 0.5449762642637572
+        "outside_window_mean_hz": 0.5449762642637572,
+        "window_minus_outside_sigmas": 2.653334260994544
       }
     }
   },
@@ -590,9 +604,10 @@
       "burst_events": 0,
       "near_threshold_rate_hz": 0.11233513245142805,
       "fraction_dt_below_10ms": 0.011834319526627219,
-      "poisson_fraction_dt_below_10ms": 0.017966719474727055,
+      "expected_fraction_dt_below_10ms": 0.008754340327480015,
       "close_triplets_below_20ms": 0,
-      "ks_p_exponential_tail": 0.7593384588018091,
+      "negative_live_waits": 0,
+      "ks_p_live_waits": 0.712,
       "dispersion_10s": 1.0427669822288659,
       "dispersion_10s_p": 0.39846740182253426
     },
@@ -606,9 +621,10 @@
       "burst_events": 0,
       "near_threshold_rate_hz": 0.11312623000506497,
       "fraction_dt_below_10ms": 0.008488964346349746,
-      "poisson_fraction_dt_below_10ms": 0.01622656450259885,
+      "expected_fraction_dt_below_10ms": 0.0078924180642026,
       "close_triplets_below_20ms": 0,
-      "ks_p_exponential_tail": 0.6535016188304332,
+      "negative_live_waits": 0,
+      "ks_p_live_waits": 0.122,
       "dispersion_10s": 0.7514431239388795,
       "dispersion_10s_p": 0.8553199449871342
     },
@@ -622,9 +638,10 @@
       "burst_events": 0,
       "near_threshold_rate_hz": 0.09250465511689861,
       "fraction_dt_below_10ms": 0.002028397565922921,
-      "poisson_fraction_dt_below_10ms": 0.015231360394155069,
+      "expected_fraction_dt_below_10ms": 0.00740434428828407,
       "close_triplets_below_20ms": 0,
-      "ks_p_exponential_tail": 0.7717545643700942,
+      "negative_live_waits": 0,
+      "ks_p_live_waits": 0.315,
       "dispersion_10s": 0.8327553490806779,
       "dispersion_10s_p": 0.7301206058961771
     },
@@ -638,9 +655,10 @@
       "burst_events": 0,
       "near_threshold_rate_hz": 0.1339608200373891,
       "fraction_dt_below_10ms": 0.01045751633986928,
-      "poisson_fraction_dt_below_10ms": 0.017078142700347687,
+      "expected_fraction_dt_below_10ms": 0.008315458160891853,
       "close_triplets_below_20ms": 0,
-      "ks_p_exponential_tail": 0.457808804772853,
+      "negative_live_waits": 1,
+      "ks_p_live_waits": 0.281,
       "dispersion_10s": 1.0924739058780444,
       "dispersion_10s_p": 0.3128924647929383
     },
@@ -654,9 +672,10 @@
       "burst_events": 0,
       "near_threshold_rate_hz": 0.1398147681435843,
       "fraction_dt_below_10ms": 0.003683241252302026,
-      "poisson_fraction_dt_below_10ms": 0.01666985908005192,
+      "expected_fraction_dt_below_10ms": 0.00811434934120292,
       "close_triplets_below_20ms": 0,
-      "ks_p_exponential_tail": 0.5644240424827942,
+      "negative_live_waits": 0,
+      "ks_p_live_waits": 0.365,
       "dispersion_10s": 0.6986857825567503,
       "dispersion_10s_p": 0.8934247421273491
     },
@@ -670,9 +689,10 @@
       "burst_events": 0,
       "near_threshold_rate_hz": 0.10876277469692325,
       "fraction_dt_below_10ms": 0.005625879043600563,
-      "poisson_fraction_dt_below_10ms": 0.016196834128528237,
+      "expected_fraction_dt_below_10ms": 0.007881646910782192,
       "close_triplets_below_20ms": 0,
-      "ks_p_exponential_tail": 0.34384931572838173,
+      "negative_live_waits": 1,
+      "ks_p_live_waits": 0.073,
       "dispersion_10s": 1.1811007689194655,
       "dispersion_10s_p": 0.19591574581586751
     },
@@ -686,9 +706,10 @@
       "burst_events": 0,
       "near_threshold_rate_hz": 0.10826939595432129,
       "fraction_dt_below_10ms": 0.006726457399103139,
-      "poisson_fraction_dt_below_10ms": 0.014528802300922239,
+      "expected_fraction_dt_below_10ms": 0.0070572419704073575,
       "close_triplets_below_20ms": 0,
-      "ks_p_exponential_tail": 0.7729701588553133,
+      "negative_live_waits": 0,
+      "ks_p_live_waits": 0.681,
       "dispersion_10s": 1.085660789514745,
       "dispersion_10s_p": 0.34296443302045315
     },
@@ -702,9 +723,10 @@
       "burst_events": 0,
       "near_threshold_rate_hz": 0.11886976307808804,
       "fraction_dt_below_10ms": 0.00945179584120983,
-      "poisson_fraction_dt_below_10ms": 0.016655258602216172,
+      "expected_fraction_dt_below_10ms": 0.008104662815079933,
       "close_triplets_below_20ms": 0,
-      "ks_p_exponential_tail": 0.6755005921590387,
+      "negative_live_waits": 0,
+      "ks_p_live_waits": 0.67,
       "dispersion_10s": 0.8386436340371082,
       "dispersion_10s_p": 0.7172533578029892
     }

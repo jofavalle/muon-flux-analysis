@@ -1,6 +1,6 @@
 07_detector_health_v1
-generated: 2026-11-21T19:23:48+00:00
-commit:    1af68342a5c25c3f24c2f704c73655471ac7a7c5 (committed inputs)
+generated: 2026-11-21T19:47:09+00:00
+commit:    43e03079e5c80f512351daae231d854372837a4b (committed inputs)
 ==============================================================================
 INTEGRITY OF THE 2026 FILES
   tacachico: 389530 rows in 3 acquisition(s) [382709, 4330, 2491], 2 rejected, glued comments at [382717], sha256 0e6d19ef771f...
@@ -36,7 +36,12 @@ EPISODES (minutes above 5 times the median count): 10
 
 COINCIDENT FLAG
   Acquisition 1: 34.2% of events flagged. Per hour, hours 0 to 4: 100.0%, 100.0%, 100.0%, 86.6%, 0.7%; from hour 4 on, 0.046%.
-  Santa Tecla 0.03%; 2025 runs 100%. With no second detector connected the flag went up and down on its own: it is not a coincidence.
+  Santa Tecla 0.03%; 2025 runs 100%.
+  Every preamble in the files prints 'Coincidence detector found.' (tacachico: 3, santa-tecla.txt: 0, runs_2025: 8; santa-tecla.txt starts
+  after its preamble), yet acquisitions 2 and 3
+  of Tacachico print it and flag 0.02% and 0.04% of their events. Neither the message nor the flag
+  follows a partner. The group's report says no second detector was connected
+  in 2026; the flag changed on its own and is not a coincidence.
 
 LIVE RATE PER ADC2 BAND AGAINST THE PEDESTAL (median of 10 min bins, 1/s)
   pedestal   bins  total   [200,260)   [260,400)   [400,700)  [700,1200) [1200,2500) [2500,4095) [4095,4096)
@@ -49,9 +54,10 @@ LIVE RATE PER ADC2 BAND AGAINST THE PEDESTAL (median of 10 min bins, 1/s)
   200-400       3 30.724      27.841       3.721       0.752       0.276       0.311       0.116       0.019
   Sta Tecla   192  1.920       0.110       0.222       0.390       0.287       0.571       0.257       0.075
   2025 all         1.819       0.116       0.217       0.360       0.258       0.477       0.283       0.108
-  The slow fault adds events just above the trigger threshold: up to a
-  pedestal of 200 the bands from ADC2 = 400 up do not move. In the burst
-  state (pedestal above 200) the [400, 700) band rises as well.
+  From pedestal class [90, 110] to [185, 200] the band just above threshold grows by a factor of 183, the bands
+  from ADC2 = 400 up change by -15 % to +27 %. The slow fault adds its events just above
+  the trigger threshold. In the burst state (pedestal above 200) the [400, 700)
+  band rises as well.
 
 VALIDATION ON TACACHICO: HOURLY LIVE RATE AGAINST A CONSTANT
   raw (no veto, no cut): 39 hours, chi2 143736.0 / 38
@@ -60,6 +66,9 @@ VALIDATION ON TACACHICO: HOURLY LIVE RATE AGAINST A CONSTANT
   ADC2>=260     36   1.3692     55.5/35       0.015    1.2%    +0.19   1.3839   1.3593
   ADC2>=400     36   1.1105     70.3/35     0.00037    1.7%    +0.12   1.1274   1.0997
   ADC2>=1000    36   0.5510     91.3/35     6.4e-07    3.0%    +0.08   0.5625   0.5450
+  With ADC2 >= 260 the ICD window and the hours outside it still differ by 1.8 %
+  (3.3 sigma from the hourly spread): the cleaned rate is close to constant, not
+  constant. The residual excess of 1.2 % is the systematic the cleaned ratio carries (step 09).
   Santa Tecla, same procedure (control):
   ADC2>=0       31   1.9160     36.4/30        0.19    0.6%    -0.62
   ADC2>=260     31   1.8041     39.3/30        0.12    0.7%    -0.66
@@ -68,15 +77,15 @@ VALIDATION ON TACACHICO: HOURLY LIVE RATE AGAINST A CONSTANT
   ADC2 cut is a different energy threshold at a different temperature.
 
 THE 2025 ANGULAR RUNS
-    run     N   ped     range  veto  A1>A2  R[200,260) dt<=10ms Poisson triplets   KS p  D(10s)   p_D
-      0   677    84   82-88       0      0       0.112    0.012   0.018        0   0.76    1.04  0.40
-      5   590    97   90-99       0      0       0.113    0.008   0.016        0   0.65    0.75  0.86
-     15   494    97   91-100      0      0       0.093    0.002   0.015        0   0.77    0.83  0.73
-     25   766    95   88-98       0      0       0.134    0.010   0.017        0   0.46    1.09  0.31
-     35   544    88   74-91       0      0       0.140    0.004   0.017        0   0.56    0.70  0.89
-     45   712    84   82-88       0      0       0.109    0.006   0.016        0   0.34    1.18  0.20
-     90   447    80   70-84       0      0       0.108    0.007   0.015        0   0.77    1.09  0.34
-    360   530    82   69-85       0      0       0.119    0.009   0.017        0   0.68    0.84  0.72
+    run     N   ped     range  veto  A1>A2  R[200,260) dt<=10ms  expect triplets   KS p  D(10s)   p_D
+      0   677    84   82-88       0      0       0.112    0.012   0.009        0   0.71    1.04  0.40
+      5   590    97   90-99       0      0       0.113    0.008   0.008        0   0.12    0.75  0.86
+     15   494    97   91-100      0      0       0.093    0.002   0.007        0   0.32    0.83  0.73
+     25   766    95   88-98       0      0       0.134    0.010   0.008        0   0.28    1.09  0.31
+     35   544    88   74-91       0      0       0.140    0.004   0.008        0   0.36    0.70  0.89
+     45   712    84   82-88       0      0       0.109    0.006   0.008        0   0.07    1.18  0.20
+     90   447    80   70-84       0      0       0.108    0.007   0.007        0   0.68    1.09  0.34
+    360   530    82   69-85       0      0       0.119    0.009   0.008        0   0.67    0.84  0.72
   No 2025 run shows either signature: they were not taken in the fault state.
 
 FIRMWARE FINGERPRINT

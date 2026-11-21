@@ -1,6 +1,6 @@
 09_altitude_v1
-generated: 2026-11-21T19:23:58+00:00
-commit:    1af68342a5c25c3f24c2f704c73655471ac7a7c5 (committed inputs)
+generated: 2026-11-21T19:47:20+00:00
+commit:    43e03079e5c80f512351daae231d854372837a4b (committed inputs)
 ==============================================================================
 (a) AS PRESENTED AT THE INTERNATIONAL COSMIC DAY 2026
     Tacachico: hours 26 to 40 of acquisition 1. Santa Tecla: whole file. All triggers.
@@ -24,8 +24,9 @@ commit:    1af68342a5c25c3f24c2f704c73655471ac7a7c5 (committed inputs)
   Predictions: classical 0.40 +- 0.02, relativistic (gamma = 38) 0.976 +- 0.001.
   The classical prediction sits 10 sigma from R.
   gamma_min = 4.8 +- 1.2; one-sided 95 % lower bound 3.2.
-  All of this assumes every trigger is a muon. It is not:
-  a 25 cm2 slab expects 0.32 to 0.42 muons/s, 20 to 26 % of Tacachico's triggers and 16 to 22 % of Santa Tecla's. With the rest independent of altitude,
+  All of this assumes every trigger is a muon. It is not. Counting the 25 cm2 face
+  only, as presented (the edges of a 1 cm slab add a fifth, step 08),
+  the slab expects 0.32 to 0.42 muons/s, 20 to 26 % of Tacachico's triggers and 16 to 22 % of Santa Tecla's. With the rest independent of altitude,
   the classical prediction becomes 0.87 to 0.90, 1.9 sigma above R.
   Ratios above ADC2 thresholds (stat, sys of the hours, total):
     ADC2 >= 1000: 0.56 +- 0.004 +- 0.012 = +- 0.013
