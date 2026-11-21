@@ -5,6 +5,9 @@ binning logic, which in the original script was written three times almost
 verbatim and forced any fix to be applied three times over.
 """
 
-from . import binning, io, models, plotting, provenance, rates  # noqa: F401
+from . import (  # noqa: F401
+    acquisition, binning, io, models, plotting, provenance, rates,
+)
 
-__all__ = ["binning", "io", "models", "plotting", "provenance", "rates"]
+__all__ = ["acquisition", "binning", "io", "models", "plotting", "provenance",
+           "rates"]
