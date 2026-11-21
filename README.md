@@ -25,16 +25,21 @@ in the files flags it, and two readings per event are enough to see it
 (`SiPM[mV]` turns out to be an exact function of the other two):
 
 - **Burst**: the low-gain channel reads more than the high-gain one,
-  `ADC1 > ADC2`, in 97 % of events, which a real pulse never does (0 to 0.1 % in
-  clean data), at 133.5 events/s.
+  `ADC1 > ADC2`, which a real pulse never does (0 to 0.1 % of events in clean
+  data). In the burst of minutes 70 to 73 it does so in 97 % of events, at 133.5
+  events/s; one episode is a full burst and two more are partly one.
 - **Slow fault**: the baseline (pedestal) of the low-gain channel rises and the
-  extra events pile up just above the trigger threshold. Above `ADC2 = 400` the
-  rate does not move while the total grows seventeenfold.
+  extra events pile up just above the trigger threshold: that band grows 183
+  times while the total grows 17 times and the bands above `ADC2 = 400` change by
+  -15 % to +27 %.
 
 A veto on the state of each minute plus the cut `ADC2 >= 260` takes the hourly
-Tacachico rate from chi-square 143 736 / 38 to 55.5 / 35 (1.2 % excess over
-Poisson), and makes the whole acquisition usable. The thresholds were chosen
-looking at that file, so this is a consistency check, not a blind test.
+Tacachico rate from chi-square 143 736 / 38 to 55.5 / 35 and lets the whole
+acquisition in. It is close to constant, not constant: a 1.2 % excess over
+Poisson remains, and the reference window and the other hours still differ by
+1.8 % (3.3 sigma); the cleaned ratio below carries that residual as its
+systematic. The thresholds were chosen looking at that file, so this is a
+consistency check, not a blind test.
 Details in [docs/detector_fault.md](docs/detector_fault.md).
 
 ![Band rates against the pedestal](results/figures/07_band_rates_v1.png)
@@ -51,12 +56,13 @@ Details in [docs/detector_fault.md](docs/detector_fault.md).
 | gamma_min (95 % lower bound) | 4.8 +- 1.2 (3.2) | 3.3 +- 0.2 (3.0) |
 
 Taken at face value, the classical expectation is excluded. **It cannot be taken
-at face value**: a single 25 cm2 detector counts 0.32 to 0.42 muons/s, so only
-16 to 26 % of its triggers can be muons. If the rest does not depend on
+at face value**: counting the 25 cm2 face only, as presented, a single
+detector sees 0.32 to 0.42 muons/s, so only 16 to 26 % of its triggers can be
+muons (the edges of a 1 cm slab add about a fifth). If the rest does not depend on
 altitude, the classical prediction rises to 0.87 to 0.90; and the ratio falls
 from 0.83 to 0.48 as the ADC2 threshold rises, which muons alone would not do.
-These data cannot decide between the two predictions. The two columns are different observables and are never combined
-(methodology 11.7). Altitudes from pressure: 307 +- 21 m and 911 +- 26 m, within
+These data cannot decide between the two predictions. The two columns are
+different observables and are never combined (methodology 11.7). Altitudes from pressure: 307 +- 21 m and 911 +- 26 m, within
 10 m of the published ones.
 
 ![Ratio against the predictions](results/figures/09_ratio_v1.png)
@@ -71,16 +77,21 @@ what the 2026 campaign taught:
   cleanest 2026 state. Cleaning them changes nothing: `I(90)/I(0)` goes from
   0.806 +- 0.049 to 0.796 +- 0.050.
 - **They are not coincidences.** About 2 events/s, every one with
-  `Coincident = 1`, where two stacked slabs see at most 0.32 coincidences/s. The
-  flag is stuck, as on the 2026 detector with nothing connected to it. These are
-  the triggers of one detector, and `cos^2(theta)` is the reference for a
-  coincidence telescope, not for them.
+  `Coincident = 1`, where two stacked slabs see at most 0.32 coincidences/s.
+  Whatever the flag (and the `Coincidence detector found.` of each preamble)
+  means, these are the triggers of one detector; the 2026 detector raised the
+  same flag for hours without a partner, according to the group that took the
+  data. `cos^2(theta)` is the reference for a coincidence telescope, not for
+  them.
 - **One slab does not fall to zero.** For an assumed 5 x 5 x 1 cm slab, even
-  pure muons fall only to 2/3 at 90 degrees. With 16 to 21 % muons the expected
-  `I(90)/I(0)` is 0.93 to 0.95; the measured 0.806 is 1.6 sigma below once the
-  7.45 % run-to-run systematic is included. Above larger ADC2 cuts the fitted
-  muon fraction rises (0.36, 0.48, 0.62 at cuts 0, 1000, 2500), with overlapping
-  intervals.
+  pure muons fall only to 2/3 at 90 degrees. With 19 to 25 % muons (the known
+  flux over the same box) the expected `I(90)/I(0)` is 0.92 to 0.94; the
+  measured 0.806 is 1.4 sigma below once the 7.45 % run-to-run systematic is
+  included, and the fitted muon fraction, 0.36 [0.23, 0.49], overlaps the
+  expected one. Above larger ADC2 cuts the profile changes shape, and above
+  saturation it even rises over 1 at intermediate angles: tilting the slab
+  lengthens the path of near-vertical muons, so an amplitude cut is not a muon
+  filter of fixed efficiency and those profiles are not fitted.
 
 The flat profile is what this setup should give. Measuring `cos^2` needs a
 working coincidence.
@@ -341,7 +352,7 @@ pipeline on the real data, on Python 3.11 and 3.13.
 
 1. **The scintillator was never measured.** The single-slab reference assumes
    5 x 5 x 1 cm; at 90 degrees it gives 0.59 for 0.5 cm and 0.79 for 2 cm. No
-   rate is corrected with it.
+   rate is corrected with it, and above amplitude cuts it does not apply.
 2. **The 2025 coincidence did not work.** The record holds singles, so no
    angular result here can test `cos^2`.
 3. **The angular convention is not documented.** The mapping from file labels to

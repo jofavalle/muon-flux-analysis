@@ -250,8 +250,11 @@ The third criterion catches a slow-fault episode whose pedestal stays just
 under 170 (Tacachico, minute 319).
 
 **9.5** After the veto, events are kept with `ADC2 >= 260`. The slow fault
-adds events just above the trigger threshold (201) and, up to a pedestal of
-200, nowhere above ADC2 = 400.
+adds its events just above the trigger threshold (201): between the lowest and
+the highest pedestal class below 200, that band grows by a factor of 183 while
+the bands from ADC2 = 400 up change by -15 % to +27 %. The cleaned rate is close
+to constant, not constant (1.2 % excess over Poisson between hours), and that
+residual is carried as a systematic wherever the cleaned rate is used.
 
 **9.6** The thresholds of 9.4 and 9.5 were chosen **by looking at the Tacachico
 file**, the one that has the fault. Its validation (step 07) is therefore not
@@ -261,10 +264,13 @@ depend on the thresholds: no 2025 event reads `ADC1 > ADC2`, and the 2025
 near-threshold rate equals that of the cleanest 2026 state.
 
 **9.7** The `Coincident` flag is not a coincidence and is never a selection.
-In the 2026 Tacachico file, with no second detector connected, it reads 1 on
-every event of the first three hours, on 87 % of the fourth and on 0.05 % of
-the events after that; in the 2025 runs it reads 1 on every event, at a rate
-no coincidence can reach.
+In the 2026 Tacachico file it reads 1 on every event of the first three hours,
+on 87 % of the fourth and on 0.05 % of the events after that, and the group
+that took the data reports that no second detector was connected. In the 2025
+runs it reads 1 on every event, at a rate no coincidence can reach. Every
+preamble prints `Coincidence detector found.`, including those of acquisitions
+2 and 3 of Tacachico, whose flag stays at 0.02 and 0.04 %: neither the message
+nor the flag follows an actual partner.
 
 ---
 
@@ -287,10 +293,19 @@ The remainder (radioactivity, electronic noise, the soft component) is taken
 as isotropic over the upper hemisphere, for which a plate sees the same rate
 at any tilt. This is an assumption, not a measurement.
 
-**10.4** `f` is fitted at each ADC2 cut with the scale profiled out in closed
-form and `f` scanned on a grid of step 0.001 in `[0, 1]`; the interval is where
-chi-square rises by 1. No optimiser and no starting point, so the result is the
-same on every machine.
+**10.4** `f` is fitted with the scale profiled out in closed form and `f`
+scanned on a grid of step 0.001 in `[0, 1]`; the interval is where chi-square
+rises by 1. No optimiser and no starting point, so the result is the same on
+every machine. The expected `f` uses the same box: the flux references are per
+cm2 of a horizontal plate, and the edges of a 5 x 5 x 1 cm box add a fifth to
+what its face collects at 0 degrees.
+
+**10.5** `g` counts every crossing, which holds only when nearly every muon
+passes the selection: `f` is fitted at ADC2 cuts 0 and 260 and nowhere else.
+Above larger cuts the efficiency depends on the path length, 1 cm / cos for a
+muon crossing the face, and tilting the slab lengthens the path of
+near-vertical muons; above saturation the profile even rises above 1. Those
+profiles are shown and not interpreted as a muon fraction.
 
 ---
 

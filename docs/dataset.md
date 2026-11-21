@@ -120,11 +120,12 @@ for the flat profile, and it is not testable with what was saved.
 *Added 2026-11-21: the premise of this section is wrong.* The runs record about
 2 events/s. Two 5 x 5 cm slabs stacked in coincidence see at most 0.32 muons/s
 (Axani et al., 2025), so these cannot be coincidences: they are the triggers
-of **one** detector, and the flag is stuck at 1. The 2026 detector, of the same
-firmware, showed the same flag stuck at 1 for three hours with nothing
-connected to it (section 7.4). There were no coincidences to filter, and what
-section 5 calls an accidental component is the large share of non-muon
-triggers that any single detector records (step 08, methodology 10).
+of **one** detector, whatever the flag and the `Coincidence detector found.`
+line of each preamble say. The 2026 detector, of the same firmware, raised the
+same flag for three hours without a partner, according to the group that took
+the data (section 7.4). There were no coincidences to filter, and what section
+5 calls an accidental component is the large share of non-muon triggers that
+any single detector records (step 08, methodology 10).
 
 ---
 
@@ -233,12 +234,12 @@ statement is made as though it could.
 *Added 2026-11-21:* the 2026 campaign settles most of this. The runs were not
 taken in a faulty state: none shows either signature of the 2026 fault (step
 07, [detector_fault.md](detector_fault.md)). They hold the singles of one
-detector (3.3), of which only 16 to 21 % can be muons at 0 degrees, and one
-slab does not fall to zero at 90 degrees even for muons. With those two facts
-the expected `I(90)/I(0)` is 0.93 to 0.95, and the measured 0.806 +- 0.049 is
-1.6 sigma below it once the 7.45 % run-to-run systematic is included. The flat
-profile is what this setup should give. The angular convention (hypothesis 3)
-remains unrecorded.
+detector (3.3), of which only 19 to 25 % can be muons at 0 degrees (for the
+assumed slab, edges included), and one slab does not fall to zero at 90
+degrees even for muons. With those two facts the expected `I(90)/I(0)` is 0.92
+to 0.94, and the measured 0.806 +- 0.049 is 1.4 sigma below it once the 7.45 %
+run-to-run systematic is included. The flat profile is what this setup should
+give. The angular convention (hypothesis 3) remains unrecorded.
 
 ---
 
@@ -321,10 +322,13 @@ holds none. How to recognise it, and how the files are cleaned, is in
 
 ### 7.4 The Coincident flag
 
-No second detector was connected. Even so, the flag reads 1 on every event of
-the first three hours of `tacachico`, on 87 % of the fourth and on 0.05 % of
-the events after that; in `santa-tecla.txt`, on 0.03 %. It is not a
-coincidence and is never used as a selection (methodology 9.7).
+According to the group that took the data, no second detector was connected.
+The flag reads 1 on every event of the first three hours of `tacachico`, on
+87 % of the fourth and on 0.05 % of the events after that; in
+`santa-tecla.txt`, on 0.03 %. Each of the three preambles of `tacachico` prints
+`Coincidence detector found.`, also those of acquisitions 2 and 3, whose flag
+stays at 0.02 and 0.04 % (`santa-tecla.txt` starts after its preamble). It is
+not a coincidence and is never used as a selection (methodology 9.7).
 
 ### 7.5 What is not recorded
 
