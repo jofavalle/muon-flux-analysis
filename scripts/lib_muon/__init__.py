@@ -6,9 +6,9 @@ verbatim and forced any fix to be applied three times over.
 """
 
 from . import (  # noqa: F401
-    acquisition, altitude, binning, health, io, models, plotting, provenance,
-    rates,
+    acquisition, altitude, binning, geometry, health, io, models, plotting,
+    provenance, rates,
 )
 
-__all__ = ["acquisition", "altitude", "binning", "health", "io", "models", "plotting", "provenance",
-           "rates"]
+__all__ = ["acquisition", "altitude", "binning", "geometry", "health", "io",
+           "models", "plotting", "provenance", "rates"]
